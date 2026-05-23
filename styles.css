@@ -344,7 +344,6 @@ h1 span { color: var(--hero-accent); }
   color: var(--text-soft);
   line-height: 1.76;
   margin: 0;
-  max-width: 62ch;
 }
 
 /* ── Services ──────────────────────────────────────────────── */
@@ -426,6 +425,9 @@ h1 span { color: var(--hero-accent); }
   font-weight: 800;
   letter-spacing: -0.01em;
   color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .service-icon {
@@ -946,6 +948,7 @@ h1 span { color: var(--hero-accent); }
   line-height: 1.78;
   margin: 10px 0 0;
   font-size: 0.96rem;
+  max-width: none;
 }
 
 .about-copy h2,
