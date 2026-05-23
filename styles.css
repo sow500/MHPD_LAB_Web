@@ -1288,6 +1288,7 @@ h1 span {
     border-left: none;
     border-top: 1px solid var(--line);
     padding: 24px 16px 48px;
+    min-height: 270px;
   }
 
   .album-slide {
