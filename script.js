@@ -362,7 +362,7 @@ const observer = new IntersectionObserver(
 );
 
 document
-  .querySelectorAll(".hero-copy, .hero-card, .service-card, .feature-card, .about-panel, .contact-card, .capability-list article, .site-footer")
+  .querySelectorAll(".service-card, .feature-card, .about-panel, .contact-card, .site-footer")
   .forEach((element) => {
     observer.observe(element);
   });
