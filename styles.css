@@ -31,6 +31,7 @@ body {
   font-size: 16px;
   color: var(--text);
   background: var(--bg);
+  overflow-x: clip;
 }
 
 /* ── Shared container ──────────────────────────────────────── */
@@ -1467,4 +1468,39 @@ h1 span { color: var(--hero-accent); }
     gap: 6px;
     padding-bottom: 24px;
   }
+}
+
+/* ── Photo Strip ────────────────────────────────────────── */
+.photo-strip-wrapper {
+  width: 100vw;
+  margin-left: calc((100% - 100vw) / 2);
+  overflow: hidden;
+  margin-top: 48px;
+  margin-bottom: 48px;
+}
+
+.photo-strip-track {
+  display: flex;
+  gap: 12px;
+  width: max-content;
+  animation: photo-strip-scroll 40s linear infinite;
+}
+
+.photo-strip-track img {
+  height: 240px;
+  width: auto;
+  object-fit: cover;
+  border-radius: 10px;
+  flex-shrink: 0;
+  pointer-events: none;
+  user-select: none;
+}
+
+@keyframes photo-strip-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .photo-strip-track { animation-play-state: paused; }
 }
