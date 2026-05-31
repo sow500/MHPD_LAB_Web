@@ -198,19 +198,38 @@
           <form id="report-form">
             <div class="form-row">
               <div class="form-group">
-                <label class="form-label" for="rpt-user">User *</label>
-                <select class="form-select" id="rpt-user" required>
-                  <option value="">Select user…</option>
-                </select>
+                <label class="form-label" for="rpt-user-input">User</label>
+                <input class="form-input" id="rpt-user-input" type="text"
+                  list="rpt-user-list" autocomplete="off"
+                  placeholder="Type or select a user…">
+                <datalist id="rpt-user-list"></datalist>
+                <input type="hidden" id="rpt-user-id">
+                <input type="hidden" id="rpt-user-email">
               </div>
               <div class="form-group">
                 <label class="form-label" for="rpt-date">Date</label>
                 <input class="form-input" id="rpt-date" type="date">
               </div>
             </div>
-            <div class="form-group">
-              <label class="form-label" for="rpt-title">Report Title *</label>
-              <input class="form-input" id="rpt-title" type="text" required placeholder="e.g., Soil CBR Test Report – June 2026">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="rpt-test-id">Test ID</label>
+                <input class="form-input" id="rpt-test-id" type="text" placeholder="e.g., c8fd07fb">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="rpt-company">Company Name</label>
+                <input class="form-input" id="rpt-company" type="text" placeholder="e.g., HVH Construction">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="rpt-client">Client Name</label>
+                <input class="form-input" id="rpt-client" type="text" placeholder="e.g., Sow Sow">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="rpt-project">Project Name</label>
+                <input class="form-input" id="rpt-project" type="text" placeholder="e.g., Highway Bridge Phase 2">
+              </div>
             </div>
             <div class="form-group">
               <label class="form-label" for="rpt-notes">Notes (optional)</label>
@@ -241,6 +260,6 @@
     </div>
   </main>
 
-  <script type="module" src="admin.js?v=6"></script>
+  <script type="module" src="admin.js?v=7"></script>
 </body>
 </html>

@@ -199,9 +199,9 @@ function applyResultsFilter() {
     if (type !== "all" && item._type !== type) return false;
     if (!term) return true;
     const haystack = [
-      item.testName, item.title, item.sampleType, item.summary,
-      item.notes, item.category, item.userCompany, item.userName,
-      item.projectName, item.bookingId, item.id,
+      item.testName, item.sampleType, item.summary, item.category,
+      item.clientName, item.companyName, item.projectName, item.testId,
+      item.notes, item.userCompany, item.userName, item.bookingId, item.id,
       formatDate(item.testedDate || item.reportDate || item.createdAt)
     ].filter(Boolean).join(" ").toLowerCase();
     return haystack.includes(term);
@@ -250,12 +250,14 @@ function renderResultItems(items) {
       return `
         <div class="result-card">
           <div class="result-header">
-            <h4>${esc(item.title)}</h4>
+            <h4>${esc(item.clientName || item.companyName || "Report")}</h4>
             <span style="font-size:11px;background:var(--success-bg);color:var(--success);padding:2px 8px;border-radius:10px;font-weight:600;">Report</span>
           </div>
           <div class="booking-meta">
+            ${item.companyName ? `<span>Company: ${esc(item.companyName)}</span>` : ""}
+            ${item.projectName ? `<span>Project: ${esc(item.projectName)}</span>` : ""}
+            ${item.testId      ? `<span>Test ID: ${esc(item.testId)}</span>`      : ""}
             <span>Date: ${formatDate(item.reportDate || item.createdAt)}</span>
-            ${item.id ? `<span>ID: ${esc(item.id.slice(0,8))}</span>` : ""}
           </div>
           ${item.notes ? `<p style="margin-top:12px;font-size:14px;">${esc(item.notes)}</p>` : ""}
           ${item.fileUrl ? `<a href="${esc(item.fileUrl)}" target="_blank" class="btn btn-secondary btn-sm" style="margin-top:12px;">View Report</a>` : ""}

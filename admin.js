@@ -172,10 +172,28 @@ async function loadUsers() {
     userSelect.innerHTML += `<option value="${esc(u.id)}" data-email="${esc(u.email)}">${esc(u.displayName || u.email)} (${esc(u.company || "—")})</option>`;
   });
 
-  const rptUserSelect = document.getElementById("rpt-user");
-  rptUserSelect.innerHTML = '<option value="">Select user…</option>';
+  const rptDatalist = document.getElementById("rpt-user-list");
+  rptDatalist.innerHTML = "";
   approved.forEach(u => {
-    rptUserSelect.innerHTML += `<option value="${esc(u.id)}" data-email="${esc(u.email)}">${esc(u.displayName || u.email)} (${esc(u.company || "—")})</option>`;
+    const opt = document.createElement("option");
+    opt.value = `${u.displayName || u.email} (${u.company || u.email})`;
+    opt.dataset.uid   = u.id;
+    opt.dataset.email = u.email;
+    opt.dataset.name  = u.displayName || "";
+    opt.dataset.company = u.company || "";
+    rptDatalist.appendChild(opt);
+  });
+
+  document.getElementById("rpt-user-input").addEventListener("input", function() {
+    const match = Array.from(rptDatalist.options).find(o => o.value === this.value);
+    document.getElementById("rpt-user-id").value    = match ? match.dataset.uid   : "";
+    document.getElementById("rpt-user-email").value = match ? match.dataset.email : "";
+    if (match) {
+      if (!document.getElementById("rpt-client").value)
+        document.getElementById("rpt-client").value = match.dataset.name;
+      if (!document.getElementById("rpt-company").value)
+        document.getElementById("rpt-company").value = match.dataset.company;
+    }
   });
 }
 
@@ -511,15 +529,17 @@ async function loadReports() {
     <div class="table-wrap">
       <table class="data-table">
         <thead>
-          <tr><th>Date</th><th>User</th><th>Title</th><th>Notes</th><th>Report</th></tr>
+          <tr><th>Date</th><th>Client</th><th>Company</th><th>Project</th><th>Test ID</th><th>Notes</th><th>Report</th></tr>
         </thead>
         <tbody>
           ${reports.map(r => `
             <tr>
-              <td>${formatDate(r.createdAt)}</td>
-              <td>${esc(r.userEmail)}</td>
-              <td>${esc(r.title)}</td>
-              <td style="font-size:13px;max-width:200px;">${esc(r.notes || "—")}</td>
+              <td>${formatDate(r.reportDate || r.createdAt)}</td>
+              <td>${esc(r.clientName || r.userEmail || "—")}</td>
+              <td style="font-size:13px;">${esc(r.companyName || "—")}</td>
+              <td style="font-size:13px;">${esc(r.projectName || "—")}</td>
+              <td style="font-size:13px;">${esc(r.testId || "—")}</td>
+              <td style="font-size:13px;max-width:180px;">${esc(r.notes || "—")}</td>
               <td>${r.fileUrl ? `<a href="${esc(r.fileUrl)}" target="_blank" class="btn btn-secondary btn-sm">View</a>` : "—"}</td>
             </tr>
           `).join("")}
@@ -535,16 +555,19 @@ reportForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   reportAlert.className = "alert";
 
-  const userSelect = document.getElementById("rpt-user");
-  const userId     = userSelect.value;
-  const userEmail  = userSelect.selectedOptions[0]?.dataset?.email || "";
-  const title      = document.getElementById("rpt-title").value.trim();
-  const notes      = document.getElementById("rpt-notes").value.trim();
-  const fileUrl    = document.getElementById("rpt-url").value.trim();
-  const dateVal    = document.getElementById("rpt-date").value;
+  const userId      = document.getElementById("rpt-user-id").value;
+  const userEmail   = document.getElementById("rpt-user-email").value;
+  const userInput   = document.getElementById("rpt-user-input").value.trim();
+  const testId      = document.getElementById("rpt-test-id").value.trim();
+  const companyName = document.getElementById("rpt-company").value.trim();
+  const clientName  = document.getElementById("rpt-client").value.trim();
+  const projectName = document.getElementById("rpt-project").value.trim();
+  const notes       = document.getElementById("rpt-notes").value.trim();
+  const fileUrl     = document.getElementById("rpt-url").value.trim();
+  const dateVal     = document.getElementById("rpt-date").value;
 
-  if (!userId || !title || !fileUrl) {
-    reportAlert.textContent = "Please fill in all required fields.";
+  if (!fileUrl) {
+    reportAlert.textContent = "Report URL is required.";
     reportAlert.className = "alert alert-danger show";
     return;
   }
@@ -555,9 +578,12 @@ reportForm.addEventListener("submit", async (e) => {
 
   try {
     await addDoc(collection(db, "reports"), {
-      userId,
-      userEmail,
-      title,
+      userId:      userId || "",
+      userEmail:   userEmail || userInput,
+      testId,
+      companyName,
+      clientName,
+      projectName,
       notes,
       fileUrl,
       reportDate: dateVal ? Timestamp.fromDate(new Date(dateVal)) : null,
