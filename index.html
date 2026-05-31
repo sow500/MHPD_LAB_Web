@@ -431,8 +431,8 @@
     </section>
 
     <!-- Photo Strip -->
-    <div class="photo-strip-wrapper" aria-hidden="true">
-      <div class="photo-strip-track">
+    <div class="photo-strip-wrapper" id="photoStrip" aria-hidden="true">
+      <div class="photo-strip-track" id="photoTrack">
         <img src="assets/photo_2026-05-26_16-04-16.jpg" alt="">
         <img src="assets/photo_2026-05-26_16-04-19.jpg" alt="">
         <img src="assets/photo_2026-05-26_16-04-32.jpg" alt="">
@@ -461,6 +461,64 @@
         <img src="assets/photo_2026-05-26_16-07-50.jpg" alt="">
       </div>
     </div>
+    <script>
+      (function() {
+        var wrapper = document.getElementById('photoStrip');
+        var track   = document.getElementById('photoTrack');
+        var isDragging = false;
+        var startX = 0;
+        var startTrackX = 0;
+
+        function getTrackX() {
+          var mx = new DOMMatrix(window.getComputedStyle(track).transform);
+          return mx.m41;
+        }
+
+        function resumeAnimation() {
+          var currentX = getTrackX();
+          var loopWidth = track.scrollWidth / 2;
+          var normalizedX = currentX % loopWidth;
+          if (normalizedX > 0) normalizedX -= loopWidth;
+          var progress = -normalizedX / loopWidth;
+          var delay = -(progress * 40);
+          track.style.transform = '';
+          track.style.animation = 'photo-strip-scroll 40s linear ' + delay + 's infinite';
+        }
+
+        function startDrag(x) {
+          isDragging = true;
+          wrapper.classList.add('is-dragging');
+          startX = x;
+          startTrackX = getTrackX();
+          track.style.animation = 'none';
+          track.style.transform = 'translateX(' + startTrackX + 'px)';
+        }
+
+        function moveDrag(x) {
+          if (!isDragging) return;
+          track.style.transform = 'translateX(' + (startTrackX + (x - startX)) + 'px)';
+        }
+
+        function endDrag() {
+          if (!isDragging) return;
+          isDragging = false;
+          wrapper.classList.remove('is-dragging');
+          resumeAnimation();
+        }
+
+        wrapper.addEventListener('mousedown', function(e) { startDrag(e.pageX); });
+        window.addEventListener('mousemove', function(e) { moveDrag(e.pageX); });
+        window.addEventListener('mouseup', endDrag);
+
+        wrapper.addEventListener('touchstart', function(e) {
+          startDrag(e.touches[0].pageX);
+        }, {passive: true});
+        wrapper.addEventListener('touchmove', function(e) {
+          moveDrag(e.touches[0].pageX);
+        }, {passive: true});
+        wrapper.addEventListener('touchend', endDrag);
+      })();
+    </script>
 
     <!-- Contact -->
     <section class="contact section" id="contact">

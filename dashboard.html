@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard | MHPD Lab</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="app-header">
+    <div class="app-header-inner">
+      <a class="app-brand" href="index.html">
+        <img src="assets/mhpd-mark.svg" alt="MHPD Lab">
+        <span class="app-brand-text">
+          <strong>MHPD Lab</strong>
+          <small>Client Portal</small>
+        </span>
+      </a>
+
+      <button class="app-nav-toggle" id="nav-toggle" aria-label="Toggle navigation">
+        <span></span><span></span><span></span>
+      </button>
+
+      <nav class="app-nav" id="app-nav">
+        <a href="dashboard.html" class="active">Dashboard</a>
+        <a href="booking.html">Book a Test</a>
+        <a href="index.html">Website</a>
+        <button class="nav-logout" id="logout-btn">Sign Out</button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main class="app-shell">
+
+    <!-- Loading -->
+    <div id="loading" class="loading-spinner">
+      <div class="spinner"></div>
+    </div>
+
+    <!-- Content (hidden until loaded) -->
+    <div id="content" style="display:none;">
+
+      <!-- Pending banner (shown if not approved) -->
+      <div id="pending-banner" class="pending-banner" style="display:none;">
+        <h3>Account Pending Approval</h3>
+        <p>Your registration is being reviewed by our team. You will gain full access once approved. Please check back later.</p>
+      </div>
+
+      <!-- Rejected banner -->
+      <div id="rejected-banner" class="pending-banner" style="display:none;">
+        <h3 style="color:var(--danger)">Account Not Approved</h3>
+        <p>Your registration was not approved. Please contact us at <a href="mailto:mhpdlab@gmail.com" style="color:var(--accent);text-decoration:underline;">mhpdlab@gmail.com</a> for more information.</p>
+      </div>
+
+      <!-- Welcome -->
+      <div id="welcome-section">
+        <h1 class="page-title" id="welcome-name">Welcome</h1>
+        <p class="page-subtitle" id="welcome-info"></p>
+      </div>
+
+      <!-- Stats -->
+      <div class="dash-stats" id="stats-section" style="display:none;">
+        <div class="stat-card">
+          <div class="stat-value" id="stat-bookings">0</div>
+          <div class="stat-label">Total Bookings</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-active">0</div>
+          <div class="stat-label">In Progress</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-completed">0</div>
+          <div class="stat-label">Completed</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-results">0</div>
+          <div class="stat-label">Results Ready</div>
+        </div>
+      </div>
+
+      <!-- Bookings section -->
+      <section id="bookings-section" style="display:none;">
+        <div class="section-header">
+          <h2 class="section-title">My Bookings</h2>
+          <a href="booking.html" class="btn btn-primary btn-sm">+ New Booking</a>
+        </div>
+        <div id="bookings-list" class="booking-list"></div>
+        <div id="bookings-empty" class="empty-state" style="display:none;">
+          <p>You haven't booked any tests yet.</p>
+          <a href="booking.html" class="btn btn-secondary btn-sm">Book Your First Test</a>
+        </div>
+      </section>
+
+      <!-- Results section -->
+      <section id="results-section" style="display:none; margin-top:40px;">
+        <div class="section-header">
+          <h2 class="section-title">My Test Results</h2>
+        </div>
+        <div id="results-list" class="booking-list"></div>
+        <div id="results-empty" class="empty-state" style="display:none;">
+          <p>No test results available yet. Results will appear here once your tests are completed.</p>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <script type="module" src="dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Book a Test | MHPD Lab</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="app-header">
+    <div class="app-header-inner">
+      <a class="app-brand" href="index.html">
+        <img src="assets/mhpd-mark.svg" alt="MHPD Lab">
+        <span class="app-brand-text">
+          <strong>MHPD Lab</strong>
+          <small>Client Portal</small>
+        </span>
+      </a>
+
+      <button class="app-nav-toggle" id="nav-toggle" aria-label="Toggle navigation">
+        <span></span><span></span><span></span>
+      </button>
+
+      <nav class="app-nav" id="app-nav">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="booking.html" class="active">Book a Test</a>
+        <a href="index.html">Website</a>
+        <button class="nav-logout" id="logout-btn">Sign Out</button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main class="app-shell">
+
+    <div id="loading" class="loading-spinner">
+      <div class="spinner"></div>
+    </div>
+
+    <div id="content" style="display:none;">
+      <h1 class="page-title">Book a Lab Test</h1>
+      <p class="page-subtitle">Submit a sample booking request. Our team will confirm your booking within 1 business day.</p>
+
+      <div id="booking-alert" class="alert"></div>
+
+      <div class="card">
+        <form id="booking-form">
+
+          <!-- Category -->
+          <div class="form-group">
+            <label class="form-label" for="category">Sample Category *</label>
+            <select class="form-select" id="category" required>
+              <option value="">Select a category…</option>
+              <option value="Coarse Aggregate">Coarse Aggregate</option>
+              <option value="Fine Aggregate">Fine Aggregate</option>
+              <option value="Soil">Soil</option>
+              <option value="Rebar">Rebar</option>
+              <option value="Structural Member">Structural Member</option>
+              <option value="In Situ">In Situ</option>
+              <option value="Concrete">Concrete</option>
+              <option value="Brick">Brick</option>
+              <option value="Cement">Cement</option>
+              <option value="Water">Water</option>
+              <option value="Pipe">Pipe</option>
+              <option value="Grade / Mix Ratio">Grade / Mix Ratio</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <!-- Specific tests -->
+          <div class="form-group" id="test-select-group" style="display:none;">
+            <label class="form-label">Select Tests</label>
+            <div id="test-checkboxes" style="display:grid;grid-template-columns:1fr;gap:6px;max-height:240px;overflow-y:auto;padding:12px;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--surface-soft);"></div>
+            <p class="form-hint">Select one or more tests you need.</p>
+          </div>
+
+          <!-- Description -->
+          <div class="form-group">
+            <label class="form-label" for="description">Test Description / Special Requirements</label>
+            <textarea class="form-textarea" id="description" rows="3" placeholder="Describe the tests you need, any specific standards, or special instructions…"></textarea>
+          </div>
+
+          <div class="form-row">
+            <!-- Quantity -->
+            <div class="form-group">
+              <label class="form-label" for="quantity">Number of Samples *</label>
+              <input class="form-input" id="quantity" type="number" min="1" value="1" required>
+            </div>
+
+            <!-- Preferred date -->
+            <div class="form-group">
+              <label class="form-label" for="preferred-date">Preferred Test Date *</label>
+              <input class="form-input" id="preferred-date" type="date" required>
+            </div>
+          </div>
+
+          <!-- Company name -->
+          <div class="form-group">
+            <label class="form-label" for="company-name">Company Name</label>
+            <input class="form-input" id="company-name" type="text" placeholder="e.g., ABC Construction Ltd.">
+          </div>
+
+          <!-- Project name -->
+          <div class="form-group">
+            <label class="form-label" for="project-name">Project Name</label>
+            <input class="form-input" id="project-name" type="text" placeholder="e.g., Highway Bridge Project Phase 2">
+          </div>
+
+          <!-- Collection method -->
+          <div class="form-group">
+            <label class="form-label" for="collection">Sample Delivery Method *</label>
+            <select class="form-select" id="collection" required>
+              <option value="">Select method…</option>
+              <option value="deliver-to-lab">I will deliver to MHPD Lab</option>
+              <option value="request-pickup">Request lab pickup</option>
+              <option value="on-site-testing">On-site testing required</option>
+            </select>
+          </div>
+
+          <!-- Notes -->
+          <div class="form-group">
+            <label class="form-label" for="notes">Additional Notes</label>
+            <textarea class="form-textarea" id="notes" rows="2" placeholder="Any additional information…"></textarea>
+          </div>
+
+          <div style="display:flex;gap:12px;margin-top:8px;">
+            <button class="btn btn-primary" type="submit" id="submit-btn">Submit Booking</button>
+            <a href="dashboard.html" class="btn btn-secondary">Cancel</a>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <script type="module" src="booking.js"></script>
+</body>
+</html>

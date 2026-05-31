@@ -1477,6 +1477,11 @@ h1 span { color: var(--hero-accent); }
   overflow: hidden;
   margin-top: 48px;
   margin-bottom: 48px;
+  cursor: grab;
+}
+
+.photo-strip-wrapper:active {
+  cursor: grabbing;
 }
 
 .photo-strip-track {
@@ -1486,14 +1491,19 @@ h1 span { color: var(--hero-accent); }
   animation: photo-strip-scroll 40s linear infinite;
 }
 
+.photo-strip-wrapper:hover .photo-strip-track,
+.photo-strip-wrapper.is-dragging .photo-strip-track {
+  animation-play-state: paused;
+}
+
 .photo-strip-track img {
   height: 240px;
   width: auto;
   object-fit: cover;
   border-radius: 10px;
   flex-shrink: 0;
-  pointer-events: none;
   user-select: none;
+  pointer-events: none;
 }
 
 @keyframes photo-strip-scroll {
