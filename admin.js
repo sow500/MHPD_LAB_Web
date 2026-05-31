@@ -249,6 +249,50 @@ async function loadBookings() {
     bookingSel.innerHTML += `<option value="${b.id}">${esc(b.userName)} — ${esc(b.category)} (${formatDate(b.createdAt)})</option>`;
   });
 
+  // ── Completed panel ────────────────────────────────────
+  const completed = allBookings.filter(b => (b.status || "").trim().toLowerCase() === "completed");
+  document.getElementById("tab-count-completed").textContent = completed.length;
+
+  if (completed.length === 0) {
+    document.getElementById("completed-empty").style.display = "block";
+  } else {
+    document.getElementById("completed-table-wrap").style.display = "block";
+    document.getElementById("completed-table-wrap").innerHTML = `
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Date</th><th>Client</th><th>Category</th><th>Tests</th>
+              <th>Samples</th><th>Delivery</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${completed.map(b => `
+              <tr>
+                <td>${formatDate(b.createdAt)}</td>
+                <td>
+                  <strong>${esc(b.userName)}</strong><br>
+                  <small style="color:var(--text-soft)">${esc(b.userCompany || b.userEmail)}</small>
+                </td>
+                <td>${esc(b.category)}</td>
+                <td style="max-width:200px;font-size:13px;">${esc(b.testDescription || "—")}</td>
+                <td>${esc(String(b.quantity || 1))}</td>
+                <td style="font-size:13px;">${esc(b.deliveryMethod || "—")}</td>
+                <td>
+                  <select class="form-select" style="font-size:13px;padding:6px 10px;min-width:130px;"
+                    onchange="window._updateBooking('${b.id}', this.value)">
+                    ${["pending","confirmed","in-progress","completed","cancelled"].map(s =>
+                      `<option value="${s}" ${s === "completed" ? "selected" : ""}>${s}</option>`
+                    ).join("")}
+                  </select>
+                </td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      </div>`;
+  }
+
   // ── In-Progress panel ──────────────────────────────────
   const inProgress = allBookings.filter(b => (b.status || "").trim().toLowerCase() === "in-progress");
   document.getElementById("tab-count-inprogress").textContent = inProgress.length;

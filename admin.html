@@ -79,10 +79,13 @@
           Pending Users<span class="tab-count" id="tab-count-users">0</span>
         </button>
         <button class="admin-tab" data-panel="bookings">
-          Bookings<span class="tab-count" id="tab-count-bookings">0</span>
+          Total Bookings<span class="tab-count" id="tab-count-bookings">0</span>
         </button>
         <button class="admin-tab" data-panel="in-progress">
           In-Progress<span class="tab-count" id="tab-count-inprogress">0</span>
+        </button>
+        <button class="admin-tab" data-panel="completed">
+          Completed<span class="tab-count" id="tab-count-completed">0</span>
         </button>
         <button class="admin-tab" data-panel="results">Results</button>
         <button class="admin-tab" data-panel="all-users">All Users</button>
@@ -111,6 +114,14 @@
         <div id="inprogress-table-wrap" style="display:none;"></div>
         <div id="inprogress-empty" class="empty-state" style="display:none;">
           <p>No in-progress bookings.</p>
+        </div>
+      </div>
+
+      <!-- PANEL: Completed -->
+      <div class="admin-panel" id="panel-completed">
+        <div id="completed-table-wrap" style="display:none;"></div>
+        <div id="completed-empty" class="empty-state" style="display:none;">
+          <p>No completed bookings.</p>
         </div>
       </div>
 
@@ -188,6 +199,6 @@
     </div>
   </main>
 
-  <script type="module" src="admin.js?v=2"></script>
+  <script type="module" src="admin.js?v=3"></script>
 </body>
 </html>
