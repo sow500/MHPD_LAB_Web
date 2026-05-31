@@ -79,6 +79,10 @@ onAuthStateChanged(auth, async (user) => {
     welcomeName.textContent = `Welcome, ${name}`;
     welcomeInfo.textContent = `${profile.company || ""} · ${profile.email || user.email}`;
 
+    if (profile.role === "admin") {
+      document.getElementById("admin-nav-link").style.display = "";
+    }
+
     loading.style.display = "none";
     content.style.display = "block";
 
