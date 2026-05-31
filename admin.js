@@ -607,12 +607,11 @@ reportForm.addEventListener("submit", async (e) => {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //  GOOGLE DRIVE AUTO-FILL (Test ID → Report URL)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const DRIVE_API_KEY   = "AIzaSyCF824gl20uZhgjBClBC2GpHVsEXV920mw";
-const DRIVE_FOLDER_ID = "1v1uag7JI3ynTFuVjmwX6usxL9V0V6Lnj";
+const DRIVE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxs2dYtmU6XLMERDduOMQKH84RzBL7IKz4Yl4M31lMy6dgb1xx1TdLRNtt9HFKVZBja/exec";
 
-const testIdInput  = document.getElementById("rpt-test-id");
+const testIdInput    = document.getElementById("rpt-test-id");
 const reportUrlInput = document.getElementById("rpt-url");
-const driveStatus  = document.createElement("p");
+const driveStatus    = document.createElement("p");
 driveStatus.style.cssText = "font-size:12px;margin-top:4px;min-height:16px;";
 testIdInput.parentElement.appendChild(driveStatus);
 
@@ -628,27 +627,27 @@ testIdInput.addEventListener("input", function () {
   driveStatus.textContent = "Searching Drive…";
   driveTimer = setTimeout(async () => {
     try {
-      const q = `name = '${term}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`;
-      const res = await fetch(
-        `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name)&key=${DRIVE_API_KEY}`
-      );
+      const res  = await fetch(`${DRIVE_SCRIPT_URL}?q=${encodeURIComponent(term)}`);
       const data = await res.json();
 
-      if (data.error) {
-        driveStatus.textContent = "Drive error: " + data.error.message;
-        driveStatus.style.color = "var(--danger)";
+      if (!data.files || data.files.length === 0) {
+        driveStatus.textContent = "No file or folder found.";
+        driveStatus.style.color = "var(--warning)";
         return;
       }
 
-      if (data.files && data.files.length > 0) {
-        const folder = data.files[0];
-        reportUrlInput.value = `https://drive.google.com/drive/folders/${folder.id}?usp=sharing`;
-        driveStatus.textContent = `✓ Found folder: ${folder.name}`;
-        driveStatus.style.color = "var(--success)";
+      // Prefer folders over files
+      const FOLDER_MIME = "application/vnd.google-apps.folder";
+      const match = data.files.find(f => f.type === FOLDER_MIME) || data.files[0];
+
+      if (match.type === FOLDER_MIME) {
+        reportUrlInput.value = `https://drive.google.com/drive/folders/${match.id}?usp=sharing`;
+        driveStatus.textContent = `✓ Folder: ${match.name}`;
       } else {
-        driveStatus.textContent = "No folder found. Make sure the folder is shared publicly.";
-        driveStatus.style.color = "var(--warning)";
+        reportUrlInput.value = `https://drive.google.com/file/d/${match.id}/view?usp=sharing`;
+        driveStatus.textContent = `✓ File: ${match.name}`;
       }
+      driveStatus.style.color = "var(--success)";
     } catch (err) {
       driveStatus.textContent = "Search failed: " + err.message;
       driveStatus.style.color = "var(--danger)";
