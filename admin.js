@@ -616,48 +616,11 @@ const driveStatus  = document.createElement("p");
 driveStatus.style.cssText = "font-size:12px;margin-top:4px;min-height:16px;";
 testIdInput.parentElement.appendChild(driveStatus);
 
-// Dropdown for multiple Drive results
-const driveDropdown = document.createElement("select");
-driveDropdown.className = "form-select";
-driveDropdown.style.cssText = "margin-top:6px;display:none;";
-driveDropdown.innerHTML = '<option value="">— Select a file —</option>';
-testIdInput.parentElement.appendChild(driveDropdown);
-driveDropdown.addEventListener("change", function() {
-  if (this.value) {
-    reportUrlInput.value = `https://drive.google.com/file/d/${this.value}/preview`;
-    driveStatus.textContent = `✓ Selected: ${this.options[this.selectedIndex].text}`;
-    driveStatus.style.color = "var(--success)";
-  }
-});
-
-async function driveSearch(q) {
-  const res = await fetch(
-    `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name)&key=${DRIVE_API_KEY}&pageSize=20`
-  );
-  return await res.json();
-}
-
-function showDriveFiles(files) {
-  if (files.length === 1) {
-    reportUrlInput.value = `https://drive.google.com/file/d/${files[0].id}/preview`;
-    driveStatus.textContent = `✓ Found: ${files[0].name}`;
-    driveStatus.style.color = "var(--success)";
-    driveDropdown.style.display = "none";
-  } else {
-    driveDropdown.innerHTML = '<option value="">— Select a file —</option>' +
-      files.map(f => `<option value="${f.id}">${f.name}</option>`).join("");
-    driveDropdown.style.display = "block";
-    driveStatus.textContent = `Found ${files.length} files — please select one:`;
-    driveStatus.style.color = "var(--text-soft)";
-  }
-}
-
 let driveTimer;
 testIdInput.addEventListener("input", function () {
   clearTimeout(driveTimer);
   const term = this.value.trim();
   driveStatus.textContent = "";
-  driveDropdown.style.display = "none";
   driveStatus.style.color = "var(--text-soft)";
 
   if (term.length < 3) return;
@@ -665,43 +628,27 @@ testIdInput.addEventListener("input", function () {
   driveStatus.textContent = "Searching Drive…";
   driveTimer = setTimeout(async () => {
     try {
-      // Step 1: search for files whose name contains the term (anywhere in Drive)
-      const fileData = await driveSearch(
-        `name contains '${term}' and mimeType != 'application/vnd.google-apps.folder' and trashed = false`
+      const q = `name contains '${term}' and '${DRIVE_FOLDER_ID}' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false`;
+      const res = await fetch(
+        `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name)&key=${DRIVE_API_KEY}`
       );
+      const data = await res.json();
 
-      if (fileData.error) {
-        driveStatus.textContent = "Drive error: " + fileData.error.message;
+      if (data.error) {
+        driveStatus.textContent = "Drive error: " + data.error.message;
         driveStatus.style.color = "var(--danger)";
         return;
       }
 
-      if (fileData.files && fileData.files.length > 0) {
-        showDriveFiles(fileData.files);
-        return;
+      if (data.files && data.files.length > 0) {
+        const folder = data.files[0];
+        reportUrlInput.value = `https://drive.google.com/drive/folders/${folder.id}?usp=sharing`;
+        driveStatus.textContent = `✓ Found folder: ${folder.name}`;
+        driveStatus.style.color = "var(--success)";
+      } else {
+        driveStatus.textContent = "No folder found. Make sure the folder is shared publicly.";
+        driveStatus.style.color = "var(--warning)";
       }
-
-      // Step 2: search for a folder whose name contains the term
-      const folderData = await driveSearch(
-        `name contains '${term}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`
-      );
-
-      if (folderData.files && folderData.files.length > 0) {
-        // Get files inside the first matching folder
-        const folderId = folderData.files[0].id;
-        const innerData = await driveSearch(
-          `'${folderId}' in parents and mimeType != 'application/vnd.google-apps.folder' and trashed = false`
-        );
-
-        if (innerData.files && innerData.files.length > 0) {
-          driveStatus.textContent = `Folder: ${folderData.files[0].name}`;
-          showDriveFiles(innerData.files);
-          return;
-        }
-      }
-
-      driveStatus.textContent = "No file or folder found with that name.";
-      driveStatus.style.color = "var(--warning)";
     } catch (err) {
       driveStatus.textContent = "Search failed: " + err.message;
       driveStatus.style.color = "var(--danger)";
