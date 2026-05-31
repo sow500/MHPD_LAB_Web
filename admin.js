@@ -628,7 +628,7 @@ testIdInput.addEventListener("input", function () {
   driveStatus.textContent = "Searching Drive…";
   driveTimer = setTimeout(async () => {
     try {
-      const q = `name contains '${term}' and '${DRIVE_FOLDER_ID}' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false`;
+      const q = `name = '${term}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`;
       const res = await fetch(
         `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name)&key=${DRIVE_API_KEY}`
       );
