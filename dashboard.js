@@ -50,7 +50,7 @@ function formatDate(ts) {
 }
 
 function badgeHTML(status) {
-  const s = (status || "pending").toLowerCase();
+  const s = (status || "pending").trim().toLowerCase();
   const cls = {
     pending: "badge-pending", approved: "badge-approved",
     rejected: "badge-rejected", confirmed: "badge-confirmed",
@@ -131,7 +131,7 @@ async function loadBookings(uid) {
   const bookings = [];
   snap.forEach(d => {
     const data = d.data();
-    bookings.push({ id: d.id, ...data, status: (data.status || "pending").toLowerCase() });
+    bookings.push({ id: d.id, ...data, status: (data.status || "pending").trim().toLowerCase() });
   });
   bookings.sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
 
