@@ -297,6 +297,7 @@ async function loadBookings() {
 window._updateBooking = async function(bookingId, newStatus) {
   try {
     await updateDoc(doc(db, "bookings", bookingId), { status: newStatus });
+    await loadBookings();
   } catch (err) {
     alert("Failed to update booking: " + err.message);
     await loadBookings();
