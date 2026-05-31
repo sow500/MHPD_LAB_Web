@@ -20,9 +20,6 @@ const bookingsEmpty   = document.getElementById("bookings-empty");
 const resultsSection  = document.getElementById("results-section");
 const resultsList     = document.getElementById("results-list");
 const resultsEmpty    = document.getElementById("results-empty");
-const reportsSection  = document.getElementById("reports-section");
-const reportsList     = document.getElementById("reports-list");
-const reportsEmpty    = document.getElementById("reports-empty");
 
 // ── Nav toggle (mobile) ───────────────────────────────────
 const navToggle = document.getElementById("nav-toggle");
@@ -103,12 +100,10 @@ onAuthStateChanged(auth, async (user) => {
     statsSection.style.display = "";
     bookingsSection.style.display = "";
     resultsSection.style.display = "";
-    reportsSection.style.display = "";
 
     await Promise.all([
       loadBookings(user.uid),
-      loadResults(user.uid),
-      loadReports(user.uid)
+      loadAllResults(user.uid)
     ]);
   } catch (err) {
     console.error("Dashboard load error:", err);
@@ -166,85 +161,105 @@ async function loadBookings(uid) {
   `).join("");
 }
 
-// ── Load results ──────────────────────────────────────────
-async function loadResults(uid) {
-  const q = query(
-    collection(db, "results"),
-    where("userId", "==", uid)
-  );
-  const snap = await getDocs(q);
+// ── Load all results & reports (combined) ─────────────────
+let allResultItems = [];
 
-  document.getElementById("stat-results").textContent = snap.size;
+async function loadAllResults(uid) {
+  let resultsSnap, reportsSnap;
+  try {
+    [resultsSnap, reportsSnap] = await Promise.all([
+      getDocs(query(collection(db, "results"), where("userId", "==", uid))),
+      getDocs(query(collection(db, "reports"),  where("userId", "==", uid)))
+    ]);
+  } catch (err) {
+    console.error("Results query error:", err);
+    resultsList.innerHTML = `<p style="color:var(--danger);padding:16px;">Could not load results: ${err.message}</p>`;
+    return;
+  }
 
-  if (snap.empty) {
+  allResultItems = [];
+  resultsSnap.forEach(d => allResultItems.push({ id: d.id, _type: "result", ...d.data() }));
+  reportsSnap.forEach(d => allResultItems.push({ id: d.id, _type: "report", ...d.data() }));
+  allResultItems.sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
+
+  document.getElementById("stat-results").textContent = resultsSnap.size;
+
+  renderResultItems(allResultItems);
+
+  // Wire up search and filter
+  document.getElementById("results-search").addEventListener("input", applyResultsFilter);
+  document.getElementById("results-type-filter").addEventListener("change", applyResultsFilter);
+}
+
+function applyResultsFilter() {
+  const term  = document.getElementById("results-search").value.trim().toLowerCase();
+  const type  = document.getElementById("results-type-filter").value;
+
+  const filtered = allResultItems.filter(item => {
+    if (type !== "all" && item._type !== type) return false;
+    if (!term) return true;
+    const haystack = [
+      item.testName, item.title, item.sampleType, item.summary,
+      item.notes, item.category, item.userCompany, item.userName,
+      item.projectName, item.bookingId, item.id,
+      formatDate(item.testedDate || item.reportDate || item.createdAt)
+    ].filter(Boolean).join(" ").toLowerCase();
+    return haystack.includes(term);
+  });
+
+  renderResultItems(filtered);
+}
+
+function renderResultItems(items) {
+  if (items.length === 0) {
+    resultsList.innerHTML = "";
     resultsEmpty.style.display = "block";
     return;
   }
+  resultsEmpty.style.display = "none";
 
-  const results = [];
-  snap.forEach(d => results.push({ id: d.id, ...d.data() }));
-  results.sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
-
-  resultsList.innerHTML = results.map(r => {
-    let detailsHTML = "";
-    if (r.resultData && typeof r.resultData === "object") {
-      detailsHTML = `<div class="result-details">
-        ${Object.entries(r.resultData).map(([k, v]) => `
-          <div class="result-field">
-            <label>${esc(k)}</label>
-            <span>${esc(String(v))}</span>
+  resultsList.innerHTML = items.map(item => {
+    if (item._type === "result") {
+      let detailsHTML = "";
+      if (item.resultData && typeof item.resultData === "object") {
+        detailsHTML = `<div class="result-details">
+          ${Object.entries(item.resultData).map(([k, v]) => `
+            <div class="result-field"><label>${esc(k)}</label><span>${esc(String(v))}</span></div>
+          `).join("")}
+        </div>`;
+      }
+      return `
+        <div class="result-card">
+          <div class="result-header">
+            <h4>${esc(item.testName || item.category || "Test Result")}</h4>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <span style="font-size:11px;background:var(--info-bg);color:var(--info);padding:2px 8px;border-radius:10px;font-weight:600;">Result</span>
+              ${badgeHTML(item.status || "completed")}
+            </div>
           </div>
-        `).join("")}
-      </div>`;
+          <div class="booking-meta">
+            <span>Sample: ${esc(item.sampleType || "—")}</span>
+            <span>Tested: ${formatDate(item.testedDate)}</span>
+            ${item.id ? `<span>ID: ${esc(item.id.slice(0,8))}</span>` : ""}
+          </div>
+          ${item.summary ? `<p style="margin-top:12px;font-size:14px;">${esc(item.summary)}</p>` : ""}
+          ${detailsHTML}
+          ${item.reportUrl ? `<a href="${esc(item.reportUrl)}" target="_blank" class="btn btn-secondary btn-sm" style="margin-top:12px;">Download Report</a>` : ""}
+        </div>`;
+    } else {
+      return `
+        <div class="result-card">
+          <div class="result-header">
+            <h4>${esc(item.title)}</h4>
+            <span style="font-size:11px;background:var(--success-bg);color:var(--success);padding:2px 8px;border-radius:10px;font-weight:600;">Report</span>
+          </div>
+          <div class="booking-meta">
+            <span>Date: ${formatDate(item.reportDate || item.createdAt)}</span>
+            ${item.id ? `<span>ID: ${esc(item.id.slice(0,8))}</span>` : ""}
+          </div>
+          ${item.notes ? `<p style="margin-top:12px;font-size:14px;">${esc(item.notes)}</p>` : ""}
+          ${item.fileUrl ? `<a href="${esc(item.fileUrl)}" target="_blank" class="btn btn-secondary btn-sm" style="margin-top:12px;">View Report</a>` : ""}
+        </div>`;
     }
-
-    return `
-      <div class="result-card">
-        <div class="result-header">
-          <h4>${esc(r.testName || r.category || "Test Result")}</h4>
-          ${badgeHTML(r.status || "completed")}
-        </div>
-        <div class="booking-meta">
-          <span>Sample: ${esc(r.sampleType || "—")}</span>
-          <span>Tested: ${formatDate(r.testedDate)}</span>
-        </div>
-        ${r.summary ? `<p style="margin-top:12px;font-size:14px;">${esc(r.summary)}</p>` : ""}
-        ${detailsHTML}
-        ${r.reportUrl ? `<a href="${esc(r.reportUrl)}" target="_blank" class="btn btn-secondary btn-sm" style="margin-top:12px;">Download Report</a>` : ""}
-      </div>
-    `;
   }).join("");
-}
-
-// ── Load reports ──────────────────────────────────────────
-async function loadReports(uid) {
-  let snap;
-  try {
-    snap = await getDocs(query(collection(db, "reports"), where("userId", "==", uid)));
-  } catch (err) {
-    console.error("Reports query error:", err);
-    return;
-  }
-
-  if (snap.empty) {
-    reportsEmpty.style.display = "block";
-    return;
-  }
-
-  const reports = [];
-  snap.forEach(d => reports.push({ id: d.id, ...d.data() }));
-  reports.sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
-
-  reportsList.innerHTML = reports.map(r => `
-    <div class="result-card">
-      <div class="result-header">
-        <h4>${esc(r.title)}</h4>
-      </div>
-      <div class="booking-meta">
-        <span>Date: ${formatDate(r.reportDate || r.createdAt)}</span>
-      </div>
-      ${r.notes ? `<p style="margin-top:12px;font-size:14px;">${esc(r.notes)}</p>` : ""}
-      ${r.fileUrl ? `<a href="${esc(r.fileUrl)}" target="_blank" class="btn btn-secondary btn-sm" style="margin-top:12px;">View Report</a>` : ""}
-    </div>
-  `).join("");
 }

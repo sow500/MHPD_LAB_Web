@@ -98,31 +98,30 @@
         </div>
       </section>
 
-      <!-- Results section -->
+      <!-- Combined Results & Reports section -->
       <section id="results-section" style="display:none; margin-top:40px;">
         <div class="section-header">
-          <h2 class="section-title">My Test Results</h2>
+          <h2 class="section-title">My Results &amp; Reports</h2>
+        </div>
+        <div style="margin-bottom:16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+          <input type="text" id="results-search" class="form-input"
+            style="flex:1;min-width:200px;"
+            placeholder="Search by name, sample type, date, project…">
+          <select id="results-type-filter" class="form-select" style="width:160px;">
+            <option value="all">All Types</option>
+            <option value="result">Test Results</option>
+            <option value="report">Reports</option>
+          </select>
         </div>
         <div id="results-list" class="booking-list"></div>
         <div id="results-empty" class="empty-state" style="display:none;">
-          <p>No test results available yet. Results will appear here once your tests are completed.</p>
-        </div>
-      </section>
-
-      <!-- Reports section -->
-      <section id="reports-section" style="display:none; margin-top:40px;">
-        <div class="section-header">
-          <h2 class="section-title">My Reports</h2>
-        </div>
-        <div id="reports-list" class="booking-list"></div>
-        <div id="reports-empty" class="empty-state" style="display:none;">
-          <p>No reports available yet.</p>
+          <p>No results or reports available yet.</p>
         </div>
       </section>
 
     </div>
   </main>
 
-  <script type="module" src="dashboard.js?v=7"></script>
+  <script type="module" src="dashboard.js?v=8"></script>
 </body>
 </html>
