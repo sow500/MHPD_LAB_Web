@@ -81,6 +81,9 @@
         <button class="admin-tab" data-panel="bookings">
           Bookings<span class="tab-count" id="tab-count-bookings">0</span>
         </button>
+        <button class="admin-tab" data-panel="in-progress">
+          In-Progress<span class="tab-count" id="tab-count-inprogress">0</span>
+        </button>
         <button class="admin-tab" data-panel="results">Results</button>
         <button class="admin-tab" data-panel="all-users">All Users</button>
       </div>
@@ -100,6 +103,14 @@
         <div id="bookings-table-wrap" style="display:none;"></div>
         <div id="bookings-empty" class="empty-state" style="display:none;">
           <p>No bookings yet.</p>
+        </div>
+      </div>
+
+      <!-- PANEL: In-Progress -->
+      <div class="admin-panel" id="panel-in-progress">
+        <div id="inprogress-table-wrap" style="display:none;"></div>
+        <div id="inprogress-empty" class="empty-state" style="display:none;">
+          <p>No in-progress bookings.</p>
         </div>
       </div>
 
