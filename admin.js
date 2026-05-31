@@ -83,7 +83,8 @@ onAuthStateChanged(auth, async (user) => {
   await Promise.all([
     loadUsers(),
     loadBookings(),
-    loadResults()
+    loadResults(),
+    loadReports()
   ]);
 });
 
@@ -164,11 +165,17 @@ async function loadUsers() {
       </table>
     </div>`;
 
-  // Populate user dropdown in results form
+  // Populate user dropdowns in results and reports forms
   const userSelect = document.getElementById("res-user");
   userSelect.innerHTML = '<option value="">Select user…</option>';
   approved.forEach(u => {
     userSelect.innerHTML += `<option value="${esc(u.id)}" data-email="${esc(u.email)}">${esc(u.displayName || u.email)} (${esc(u.company || "—")})</option>`;
+  });
+
+  const rptUserSelect = document.getElementById("rpt-user");
+  rptUserSelect.innerHTML = '<option value="">Select user…</option>';
+  approved.forEach(u => {
+    rptUserSelect.innerHTML += `<option value="${esc(u.id)}" data-email="${esc(u.email)}">${esc(u.displayName || u.email)} (${esc(u.company || "—")})</option>`;
   });
 }
 
@@ -481,4 +488,92 @@ resultForm.addEventListener("submit", async (e) => {
 
   submitBtn.disabled = false;
   submitBtn.textContent = "Publish Result";
+});
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  REPORTS
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+async function loadReports() {
+  const snap = await getDocs(query(collection(db, "reports"), orderBy("createdAt", "desc")));
+  document.getElementById("reports-admin-loading").style.display = "none";
+
+  if (snap.empty) {
+    document.getElementById("reports-admin-empty").style.display = "block";
+    return;
+  }
+
+  const reports = [];
+  snap.forEach(d => reports.push({ id: d.id, ...d.data() }));
+
+  document.getElementById("reports-admin-table-wrap").style.display = "block";
+  document.getElementById("reports-admin-table-wrap").innerHTML = `
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr><th>Date</th><th>User</th><th>Title</th><th>Notes</th><th>Report</th></tr>
+        </thead>
+        <tbody>
+          ${reports.map(r => `
+            <tr>
+              <td>${formatDate(r.createdAt)}</td>
+              <td>${esc(r.userEmail)}</td>
+              <td>${esc(r.title)}</td>
+              <td style="font-size:13px;max-width:200px;">${esc(r.notes || "—")}</td>
+              <td>${r.fileUrl ? `<a href="${esc(r.fileUrl)}" target="_blank" class="btn btn-secondary btn-sm">View</a>` : "—"}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+const reportForm = document.getElementById("report-form");
+const reportAlert = document.getElementById("report-alert");
+
+reportForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  reportAlert.className = "alert";
+
+  const userSelect = document.getElementById("rpt-user");
+  const userId     = userSelect.value;
+  const userEmail  = userSelect.selectedOptions[0]?.dataset?.email || "";
+  const title      = document.getElementById("rpt-title").value.trim();
+  const notes      = document.getElementById("rpt-notes").value.trim();
+  const fileUrl    = document.getElementById("rpt-url").value.trim();
+  const dateVal    = document.getElementById("rpt-date").value;
+
+  if (!userId || !title || !fileUrl) {
+    reportAlert.textContent = "Please fill in all required fields.";
+    reportAlert.className = "alert alert-danger show";
+    return;
+  }
+
+  const submitBtn = document.getElementById("report-submit-btn");
+  submitBtn.disabled = true;
+  submitBtn.textContent = "Uploading…";
+
+  try {
+    await addDoc(collection(db, "reports"), {
+      userId,
+      userEmail,
+      title,
+      notes,
+      fileUrl,
+      reportDate: dateVal ? Timestamp.fromDate(new Date(dateVal)) : null,
+      createdAt: serverTimestamp()
+    });
+
+    reportAlert.textContent = "Report uploaded successfully!";
+    reportAlert.className = "alert alert-success show";
+    reportForm.reset();
+    await loadReports();
+  } catch (err) {
+    console.error("Report upload error:", err);
+    reportAlert.textContent = "Failed to upload report: " + err.message;
+    reportAlert.className = "alert alert-danger show";
+  }
+
+  submitBtn.disabled = false;
+  submitBtn.textContent = "Upload Report";
 });

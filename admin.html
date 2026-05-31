@@ -88,6 +88,7 @@
           Completed<span class="tab-count" id="tab-count-completed">0</span>
         </button>
         <button class="admin-tab" data-panel="results">Results</button>
+        <button class="admin-tab" data-panel="reports">Reports</button>
         <button class="admin-tab" data-panel="all-users">All Users</button>
       </div>
 
@@ -190,6 +191,47 @@
         </div>
       </div>
 
+      <!-- PANEL: Reports -->
+      <div class="admin-panel" id="panel-reports">
+        <div class="card" style="margin-bottom:24px;">
+          <h3 class="card-title" style="margin-bottom:16px;">Upload Report</h3>
+          <form id="report-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="rpt-user">User *</label>
+                <select class="form-select" id="rpt-user" required>
+                  <option value="">Select user…</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="rpt-date">Date</label>
+                <input class="form-input" id="rpt-date" type="date">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="rpt-title">Report Title *</label>
+              <input class="form-input" id="rpt-title" type="text" required placeholder="e.g., Soil CBR Test Report – June 2026">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="rpt-notes">Notes (optional)</label>
+              <textarea class="form-textarea" id="rpt-notes" rows="2" placeholder="Any notes about this report…"></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="rpt-url">Report URL (PDF link) *</label>
+              <input class="form-input" id="rpt-url" type="url" required placeholder="https://drive.google.com/file/d/…/preview">
+            </div>
+            <div id="report-alert" class="alert"></div>
+            <button class="btn btn-primary" type="submit" id="report-submit-btn">Upload Report</button>
+          </form>
+        </div>
+        <h3 style="margin-bottom:16px;">Uploaded Reports</h3>
+        <div id="reports-admin-loading" class="loading-spinner"><div class="spinner"></div></div>
+        <div id="reports-admin-table-wrap" style="display:none;"></div>
+        <div id="reports-admin-empty" class="empty-state" style="display:none;">
+          <p>No reports uploaded yet.</p>
+        </div>
+      </div>
+
       <!-- PANEL: All Users -->
       <div class="admin-panel" id="panel-all-users">
         <div id="all-users-loading" class="loading-spinner"><div class="spinner"></div></div>
@@ -199,6 +241,6 @@
     </div>
   </main>
 
-  <script type="module" src="admin.js?v=5"></script>
+  <script type="module" src="admin.js?v=6"></script>
 </body>
 </html>

@@ -52,5 +52,14 @@ service cloud.firestore {
         || (isSignedIn() && resource.data.userId == request.auth.uid);
       allow create, update: if isAdmin();
     }
+
+    // ── Reports ────────────────────────────────────────────
+    match /reports/{reportId} {
+      allow get:    if isSignedIn()
+        && (resource.data.userId == request.auth.uid || isAdmin());
+      allow list:   if isAdmin()
+        || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow create, update: if isAdmin();
+    }
   }
 }

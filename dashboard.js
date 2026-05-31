@@ -20,6 +20,9 @@ const bookingsEmpty   = document.getElementById("bookings-empty");
 const resultsSection  = document.getElementById("results-section");
 const resultsList     = document.getElementById("results-list");
 const resultsEmpty    = document.getElementById("results-empty");
+const reportsSection  = document.getElementById("reports-section");
+const reportsList     = document.getElementById("reports-list");
+const reportsEmpty    = document.getElementById("reports-empty");
 
 // ── Nav toggle (mobile) ───────────────────────────────────
 const navToggle = document.getElementById("nav-toggle");
@@ -100,10 +103,12 @@ onAuthStateChanged(auth, async (user) => {
     statsSection.style.display = "";
     bookingsSection.style.display = "";
     resultsSection.style.display = "";
+    reportsSection.style.display = "";
 
     await Promise.all([
       loadBookings(user.uid),
-      loadResults(user.uid)
+      loadResults(user.uid),
+      loadReports(user.uid)
     ]);
   } catch (err) {
     console.error("Dashboard load error:", err);
@@ -209,4 +214,37 @@ async function loadResults(uid) {
       </div>
     `;
   }).join("");
+}
+
+// ── Load reports ──────────────────────────────────────────
+async function loadReports(uid) {
+  let snap;
+  try {
+    snap = await getDocs(query(collection(db, "reports"), where("userId", "==", uid)));
+  } catch (err) {
+    console.error("Reports query error:", err);
+    return;
+  }
+
+  if (snap.empty) {
+    reportsEmpty.style.display = "block";
+    return;
+  }
+
+  const reports = [];
+  snap.forEach(d => reports.push({ id: d.id, ...d.data() }));
+  reports.sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
+
+  reportsList.innerHTML = reports.map(r => `
+    <div class="result-card">
+      <div class="result-header">
+        <h4>${esc(r.title)}</h4>
+      </div>
+      <div class="booking-meta">
+        <span>Date: ${formatDate(r.reportDate || r.createdAt)}</span>
+      </div>
+      ${r.notes ? `<p style="margin-top:12px;font-size:14px;">${esc(r.notes)}</p>` : ""}
+      ${r.fileUrl ? `<a href="${esc(r.fileUrl)}" target="_blank" class="btn btn-secondary btn-sm" style="margin-top:12px;">View Report</a>` : ""}
+    </div>
+  `).join("");
 }
