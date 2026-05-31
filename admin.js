@@ -603,3 +603,55 @@ reportForm.addEventListener("submit", async (e) => {
   submitBtn.disabled = false;
   submitBtn.textContent = "Upload Report";
 });
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  GOOGLE DRIVE AUTO-FILL (Test ID → Report URL)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const DRIVE_API_KEY   = "AIzaSyCF824gl20uZhgjBClBC2GpHVsEXV920mw";
+const DRIVE_FOLDER_ID = "1v1uag7JI3ynTFuVjmwX6usxL9V0V6Lnj";
+
+const testIdInput  = document.getElementById("rpt-test-id");
+const reportUrlInput = document.getElementById("rpt-url");
+const driveStatus  = document.createElement("p");
+driveStatus.style.cssText = "font-size:12px;margin-top:4px;min-height:16px;";
+testIdInput.parentElement.appendChild(driveStatus);
+
+let driveTimer;
+testIdInput.addEventListener("input", function () {
+  clearTimeout(driveTimer);
+  const testId = this.value.trim();
+  driveStatus.textContent = "";
+  driveStatus.style.color = "var(--text-soft)";
+
+  if (testId.length < 4) return;
+
+  driveStatus.textContent = "Searching Drive…";
+  driveTimer = setTimeout(async () => {
+    try {
+      const q   = encodeURIComponent(`name contains '${testId}' and '${DRIVE_FOLDER_ID}' in parents and trashed = false`);
+      const res = await fetch(
+        `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)&key=${DRIVE_API_KEY}`
+      );
+      const data = await res.json();
+
+      if (data.error) {
+        driveStatus.textContent = "Drive error: " + data.error.message;
+        driveStatus.style.color = "var(--danger)";
+        return;
+      }
+
+      if (data.files && data.files.length > 0) {
+        const file = data.files[0];
+        reportUrlInput.value = `https://drive.google.com/file/d/${file.id}/preview`;
+        driveStatus.textContent = `✓ Found: ${file.name}`;
+        driveStatus.style.color = "var(--success)";
+      } else {
+        driveStatus.textContent = "No file found with that Test ID.";
+        driveStatus.style.color = "var(--warning)";
+      }
+    } catch (err) {
+      driveStatus.textContent = "Search failed: " + err.message;
+      driveStatus.style.color = "var(--danger)";
+    }
+  }, 600);
+});
