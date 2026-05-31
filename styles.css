@@ -123,6 +123,21 @@ body {
   background: var(--accent-soft);
 }
 
+.nav-portal {
+  padding: 9px 20px !important;
+  border-radius: 999px !important;
+  background: transparent !important;
+  color: var(--accent) !important;
+  font-weight: 700 !important;
+  border: 2px solid var(--accent) !important;
+}
+
+.nav-portal:hover {
+  background: var(--accent-soft) !important;
+  color: var(--accent) !important;
+  transform: translateY(-1px);
+}
+
 .nav-cta {
   padding: 9px 20px !important;
   border-radius: 999px !important;
@@ -1416,6 +1431,11 @@ h1 span { color: var(--hero-accent); }
     border-radius: 8px;
     font-weight: 600;
     color: var(--text);
+  }
+
+  .nav-portal {
+    margin-top: 8px;
+    text-align: center;
   }
 
   .nav-cta {
