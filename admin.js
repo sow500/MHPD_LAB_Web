@@ -615,6 +615,25 @@ const driveStatus    = document.createElement("p");
 driveStatus.style.cssText = "font-size:12px;margin-top:4px;min-height:16px;";
 testIdInput.parentElement.appendChild(driveStatus);
 
+function driveJsonp(term) {
+  return new Promise((resolve, reject) => {
+    const cbName = "driveCallback_" + Date.now();
+    const script = document.createElement("script");
+    script.src = `${DRIVE_SCRIPT_URL}?q=${encodeURIComponent(term)}&callback=${cbName}`;
+    window[cbName] = (data) => {
+      delete window[cbName];
+      document.head.removeChild(script);
+      resolve(data);
+    };
+    script.onerror = () => {
+      delete window[cbName];
+      document.head.removeChild(script);
+      reject(new Error("Script load failed"));
+    };
+    document.head.appendChild(script);
+  });
+}
+
 let driveTimer;
 testIdInput.addEventListener("input", function () {
   clearTimeout(driveTimer);
@@ -627,8 +646,7 @@ testIdInput.addEventListener("input", function () {
   driveStatus.textContent = "Searching Drive…";
   driveTimer = setTimeout(async () => {
     try {
-      const res  = await fetch(`${DRIVE_SCRIPT_URL}?q=${encodeURIComponent(term)}`);
-      const data = await res.json();
+      const data = await driveJsonp(term);
 
       if (!data.files || data.files.length === 0) {
         driveStatus.textContent = "No file or folder found.";
@@ -636,7 +654,6 @@ testIdInput.addEventListener("input", function () {
         return;
       }
 
-      // Prefer folders over files
       const FOLDER_MIME = "application/vnd.google-apps.folder";
       const match = data.files.find(f => f.type === FOLDER_MIME) || data.files[0];
 
