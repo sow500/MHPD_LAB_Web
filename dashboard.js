@@ -50,13 +50,14 @@ function formatDate(ts) {
 }
 
 function badgeHTML(status) {
+  const s = (status || "pending").toLowerCase();
   const cls = {
     pending: "badge-pending", approved: "badge-approved",
     rejected: "badge-rejected", confirmed: "badge-confirmed",
     "in-progress": "badge-in-progress", completed: "badge-completed",
     cancelled: "badge-cancelled"
-  }[status] || "badge-pending";
-  return `<span class="badge ${cls}">${esc(status)}</span>`;
+  }[s] || "badge-pending";
+  return `<span class="badge ${cls}">${esc(s)}</span>`;
 }
 
 // ── Auth guard ────────────────────────────────────────────
@@ -136,9 +137,9 @@ async function loadBookings(uid) {
 
   document.getElementById("stat-bookings").textContent = bookings.length;
   document.getElementById("stat-active").textContent =
-    bookings.filter(b => b.status === "confirmed" || b.status === "in-progress").length;
+    bookings.filter(b => ["confirmed", "in-progress"].includes((b.status || "").toLowerCase())).length;
   document.getElementById("stat-completed").textContent =
-    bookings.filter(b => b.status === "completed").length;
+    bookings.filter(b => (b.status || "").toLowerCase() === "completed").length;
 
   bookingsList.innerHTML = bookings.map(b => `
     <div class="booking-card">
