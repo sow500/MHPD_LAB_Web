@@ -102,17 +102,22 @@ onAuthStateChanged(auth, async (user) => {
     ]);
   } catch (err) {
     console.error("Dashboard load error:", err);
-    loading.innerHTML = '<p style="text-align:center;color:var(--danger);">Failed to load dashboard. Please refresh the page.</p>';
+    content.style.display = "block";
+    loading.style.display = "none";
+    bookingsList.innerHTML = `<p style="color:var(--danger);padding:16px;">Error loading dashboard: ${err.message}</p>`;
   }
 });
 
 // ── Load bookings ─────────────────────────────────────────
 async function loadBookings(uid) {
-  const q = query(
-    collection(db, "bookings"),
-    where("userId", "==", uid)
-  );
-  const snap = await getDocs(q);
+  let snap;
+  try {
+    snap = await getDocs(query(collection(db, "bookings"), where("userId", "==", uid)));
+  } catch (err) {
+    console.error("Bookings query error:", err);
+    bookingsList.innerHTML = `<p style="color:var(--danger);padding:16px;">Could not load bookings: ${err.message}</p>`;
+    return;
+  }
 
   if (snap.empty) {
     bookingsEmpty.style.display = "block";
