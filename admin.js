@@ -196,13 +196,14 @@ async function loadBookings() {
 
   const active = allBookings.filter(b => !["completed", "cancelled"].includes((b.status || "").trim().toLowerCase()));
   document.getElementById("a-stat-bookings").textContent     = active.length;
-  document.getElementById("tab-count-bookings").textContent  = active.length;
+  document.getElementById("tab-count-bookings").textContent  = allBookings.length;
 
   document.getElementById("bookings-loading").style.display = "none";
 
-  if (active.length === 0) {
+  if (allBookings.length === 0) {
     document.getElementById("bookings-empty").style.display = "block";
-  } else {
+    return;
+  }
 
   document.getElementById("bookings-table-wrap").style.display = "block";
   document.getElementById("bookings-table-wrap").innerHTML = `
@@ -215,7 +216,7 @@ async function loadBookings() {
           </tr>
         </thead>
         <tbody>
-          ${active.map(b => `
+          ${allBookings.map(b => `
             <tr>
               <td>${formatDate(b.createdAt)}</td>
               <td>
@@ -240,7 +241,6 @@ async function loadBookings() {
         </tbody>
       </table>
     </div>`;
-  } // end active.length > 0
 
   // Populate booking dropdown in results form
   const bookingSel = document.getElementById("res-booking");
