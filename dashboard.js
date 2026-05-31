@@ -3,7 +3,7 @@ import {
   onAuthStateChanged, signOut
 } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
 import {
-  doc, getDoc, collection, query, where, getDocs, orderBy
+  doc, getDoc, collection, query, where, getDocs
 } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
 
 // ── DOM refs ──────────────────────────────────────────────
@@ -110,8 +110,7 @@ onAuthStateChanged(auth, async (user) => {
 async function loadBookings(uid) {
   const q = query(
     collection(db, "bookings"),
-    where("userId", "==", uid),
-    orderBy("createdAt", "desc")
+    where("userId", "==", uid)
   );
   const snap = await getDocs(q);
 
@@ -124,7 +123,11 @@ async function loadBookings(uid) {
   }
 
   const bookings = [];
-  snap.forEach(d => bookings.push({ id: d.id, ...d.data() }));
+  snap.forEach(d => {
+    const data = d.data();
+    bookings.push({ id: d.id, ...data, status: (data.status || "pending").toLowerCase() });
+  });
+  bookings.sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
 
   document.getElementById("stat-bookings").textContent = bookings.length;
   document.getElementById("stat-active").textContent =
@@ -152,8 +155,7 @@ async function loadBookings(uid) {
 async function loadResults(uid) {
   const q = query(
     collection(db, "results"),
-    where("userId", "==", uid),
-    orderBy("createdAt", "desc")
+    where("userId", "==", uid)
   );
   const snap = await getDocs(q);
 
@@ -166,6 +168,7 @@ async function loadResults(uid) {
 
   const results = [];
   snap.forEach(d => results.push({ id: d.id, ...d.data() }));
+  results.sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
 
   resultsList.innerHTML = results.map(r => {
     let detailsHTML = "";

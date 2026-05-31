@@ -149,7 +149,8 @@ onAuthStateChanged(auth, async (user) => {
   }
 
   const snap = await getDoc(doc(db, "users", user.uid));
-  if (!snap.exists() || snap.data().status !== "approved") {
+  const status = snap.exists() ? snap.data().status : null;
+  if (!snap.exists() || status === "pending" || status === "rejected") {
     window.location.href = "dashboard.html";
     return;
   }
