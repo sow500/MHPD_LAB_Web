@@ -162,19 +162,6 @@ regForm.addEventListener("submit", async (e) => {
   }
 });
 
-// ── Handle redirect result on page load ───────────────────
-getRedirectResult(auth).then(async (result) => {
-  if (!result) return;
-  const user = result.user;
-  await ensureUserProfile(user, { displayName: user.displayName });
-  const snap = await getDoc(doc(db, "users", user.uid));
-  redirectUser(snap.data().status, snap.data().role);
-}).catch((err) => {
-  if (err.code && err.code !== "auth/cancelled-popup-request") {
-    showAlert(`Google sign-in failed (${err.code}). Please try again.`);
-  }
-});
-
 // ── Google sign-in ────────────────────────────────────────
 async function handleGoogle() {
   hideAlert();
