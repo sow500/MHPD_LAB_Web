@@ -94,35 +94,88 @@
 
       <!-- PANEL: Pending Users -->
       <div class="admin-panel active" id="panel-users">
+        <div id="users-search-bar" style="display:none;margin-bottom:16px;gap:10px;align-items:center;">
+          <input class="form-input" id="users-search" type="text" placeholder="Search by Name, Email, Phone, or Company…" autocomplete="off" style="flex:1;min-width:0;">
+          <select class="form-select" id="users-sort" style="width:210px;flex-shrink:0;">
+            <option value="date-desc">Registered: Newest first</option>
+            <option value="date-asc">Registered: Oldest first</option>
+            <option value="name-asc">Name: A → Z</option>
+            <option value="name-desc">Name: Z → A</option>
+            <option value="company-asc">Company: A → Z</option>
+          </select>
+        </div>
         <div id="users-loading" class="loading-spinner"><div class="spinner"></div></div>
         <div id="users-table-wrap" style="display:none;"></div>
         <div id="users-empty" class="empty-state" style="display:none;">
           <p>No pending registrations.</p>
         </div>
+        <div id="users-no-match" class="empty-state" style="display:none;">
+          <p>No pending users match your search.</p>
+        </div>
       </div>
 
       <!-- PANEL: Bookings -->
       <div class="admin-panel" id="panel-bookings">
+        <div id="bookings-search-bar" style="display:none;margin-bottom:16px;gap:10px;align-items:center;">
+          <input class="form-input" id="bookings-search" type="text" placeholder="Search by Client, Category, Status, or Date…" autocomplete="off" style="flex:1;min-width:0;">
+          <select class="form-select" id="bookings-sort" style="width:210px;flex-shrink:0;">
+            <option value="date-desc">Date: Newest first</option>
+            <option value="date-asc">Date: Oldest first</option>
+            <option value="client-asc">Client: A → Z</option>
+            <option value="client-desc">Client: Z → A</option>
+            <option value="category-asc">Category: A → Z</option>
+            <option value="status-asc">Status: A → Z</option>
+          </select>
+        </div>
         <div id="bookings-loading" class="loading-spinner"><div class="spinner"></div></div>
         <div id="bookings-table-wrap" style="display:none;"></div>
         <div id="bookings-empty" class="empty-state" style="display:none;">
           <p>No bookings yet.</p>
         </div>
+        <div id="bookings-no-match" class="empty-state" style="display:none;">
+          <p>No bookings match your search.</p>
+        </div>
       </div>
 
       <!-- PANEL: In-Progress -->
       <div class="admin-panel" id="panel-in-progress">
+        <div id="inprogress-search-bar" style="display:none;margin-bottom:16px;gap:10px;align-items:center;">
+          <input class="form-input" id="inprogress-search" type="text" placeholder="Search by Client, Category, or Date…" autocomplete="off" style="flex:1;min-width:0;">
+          <select class="form-select" id="inprogress-sort" style="width:210px;flex-shrink:0;">
+            <option value="date-desc">Date: Newest first</option>
+            <option value="date-asc">Date: Oldest first</option>
+            <option value="client-asc">Client: A → Z</option>
+            <option value="client-desc">Client: Z → A</option>
+            <option value="category-asc">Category: A → Z</option>
+          </select>
+        </div>
         <div id="inprogress-table-wrap" style="display:none;"></div>
         <div id="inprogress-empty" class="empty-state" style="display:none;">
           <p>No in-progress bookings.</p>
+        </div>
+        <div id="inprogress-no-match" class="empty-state" style="display:none;">
+          <p>No in-progress bookings match your search.</p>
         </div>
       </div>
 
       <!-- PANEL: Completed -->
       <div class="admin-panel" id="panel-completed">
+        <div id="completed-search-bar" style="display:none;margin-bottom:16px;gap:10px;align-items:center;">
+          <input class="form-input" id="completed-search" type="text" placeholder="Search by Client, Category, or Date…" autocomplete="off" style="flex:1;min-width:0;">
+          <select class="form-select" id="completed-sort" style="width:210px;flex-shrink:0;">
+            <option value="date-desc">Date: Newest first</option>
+            <option value="date-asc">Date: Oldest first</option>
+            <option value="client-asc">Client: A → Z</option>
+            <option value="client-desc">Client: Z → A</option>
+            <option value="category-asc">Category: A → Z</option>
+          </select>
+        </div>
         <div id="completed-table-wrap" style="display:none;"></div>
         <div id="completed-empty" class="empty-state" style="display:none;">
           <p>No completed bookings.</p>
+        </div>
+        <div id="completed-no-match" class="empty-state" style="display:none;">
+          <p>No completed bookings match your search.</p>
         </div>
       </div>
 
@@ -184,10 +237,22 @@
           </form>
         </div>
         <h3 style="margin-bottom:16px;">Published Results</h3>
+        <div id="results-search-bar" style="display:none;margin-bottom:16px;gap:10px;align-items:center;">
+          <input class="form-input" id="results-search" type="text" placeholder="Search by User, Test Name, Sample, or Date…" autocomplete="off" style="flex:1;min-width:0;">
+          <select class="form-select" id="results-sort" style="width:210px;flex-shrink:0;">
+            <option value="date-desc">Date: Newest first</option>
+            <option value="date-asc">Date: Oldest first</option>
+            <option value="user-asc">User: A → Z</option>
+            <option value="testname-asc">Test Name: A → Z</option>
+          </select>
+        </div>
         <div id="results-loading" class="loading-spinner"><div class="spinner"></div></div>
         <div id="results-table-wrap" style="display:none;"></div>
         <div id="results-empty" class="empty-state" style="display:none;">
           <p>No results published yet.</p>
+        </div>
+        <div id="results-no-match" class="empty-state" style="display:none;">
+          <p>No results match your search.</p>
         </div>
       </div>
 
@@ -246,7 +311,7 @@
         <h3 style="margin-bottom:16px;">Uploaded Reports</h3>
         <div id="reports-search-bar" style="display:none;margin-bottom:16px;gap:10px;align-items:center;">
           <input class="form-input" id="reports-search" type="text" placeholder="Search by Test ID, Company, Client, Project, or Date…" autocomplete="off" style="flex:1;min-width:0;">
-          <select class="form-select" id="reports-sort" style="width:190px;flex-shrink:0;">
+          <select class="form-select" id="reports-sort" style="width:210px;flex-shrink:0;">
             <option value="date-desc">Date: Newest first</option>
             <option value="date-asc">Date: Oldest first</option>
             <option value="client-asc">Client: A → Z</option>
@@ -268,13 +333,27 @@
 
       <!-- PANEL: All Users -->
       <div class="admin-panel" id="panel-all-users">
+        <div id="all-users-search-bar" style="display:none;margin-bottom:16px;gap:10px;align-items:center;">
+          <input class="form-input" id="all-users-search" type="text" placeholder="Search by Name, Email, Company, Role, or Status…" autocomplete="off" style="flex:1;min-width:0;">
+          <select class="form-select" id="all-users-sort" style="width:210px;flex-shrink:0;">
+            <option value="date-desc">Registered: Newest first</option>
+            <option value="date-asc">Registered: Oldest first</option>
+            <option value="name-asc">Name: A → Z</option>
+            <option value="name-desc">Name: Z → A</option>
+            <option value="company-asc">Company: A → Z</option>
+            <option value="status-asc">Status: A → Z</option>
+          </select>
+        </div>
         <div id="all-users-loading" class="loading-spinner"><div class="spinner"></div></div>
         <div id="all-users-table-wrap" style="display:none;"></div>
+        <div id="all-users-no-match" class="empty-state" style="display:none;">
+          <p>No users match your search.</p>
+        </div>
       </div>
 
     </div>
   </main>
 
-  <script type="module" src="admin.js?v=14"></script>
+  <script type="module" src="admin.js?v=15"></script>
 </body>
 </html>
