@@ -404,20 +404,15 @@ document.querySelectorAll(".person-tab").forEach((tab) => {
   });
 });
 
-// Total test count — JSONP via script tag (no CORS issues)
-window._testCountCb = function(response) {
-  const n = response?.table?.rows?.[0]?.c?.[0]?.v;
-  if (typeof n === 'number') {
-    const el = document.getElementById('total-tests-count');
-    if (el) el.textContent = Math.round(n).toLocaleString() + '+';
-  }
-};
-(function loadTestCount() {
-  const id = '1-7XSox9nwCKdO5bWF8Xe-79zmxNpplckRPVpxcJ_cP4';
-  const q  = encodeURIComponent('select A limit 1');
-  const sh = encodeURIComponent('Summary');
-  const s  = document.createElement('script');
-  s.src = `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:json;handler=_testCountCb&sheet=${sh}&tq=${q}`;
-  s.onerror = function() {};
-  document.head.appendChild(s);
+// Total test count — fetched from Google Apps Script Web App
+(async function loadTestCount() {
+  const url = 'https://script.google.com/macros/s/AKfycbwUCVL8dMZwePJgI_cUYCaYd85QzxPLFEGnG5pgJHHeM5oS8r2VlL1s2R9aeAwGH_3bPg/exec';
+  try {
+    const data = await (await fetch(url)).json();
+    const n = data?.count;
+    if (typeof n === 'number') {
+      const el = document.getElementById('total-tests-count');
+      if (el) el.textContent = Math.round(n).toLocaleString() + '+';
+    }
+  } catch {}
 })();
