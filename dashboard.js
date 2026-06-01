@@ -17,17 +17,15 @@ const statsSection    = document.getElementById("stats-section");
 const bookingsSection = document.getElementById("bookings-section");
 const bookingsList    = document.getElementById("bookings-list");
 const bookingsEmpty   = document.getElementById("bookings-empty");
-const resultsSection  = document.getElementById("results-section");
-const resultsList     = document.getElementById("results-list");
-const resultsEmpty    = document.getElementById("results-empty");
+const reportsSection  = document.getElementById("reports-section");
+const reportsList     = document.getElementById("reports-list");
+const reportsEmpty    = document.getElementById("reports-empty");
 
 // ── Nav toggle (mobile) ───────────────────────────────────
 const navToggle = document.getElementById("nav-toggle");
 const appNav    = document.getElementById("app-nav");
 if (navToggle) {
-  navToggle.addEventListener("click", () => {
-    appNav.classList.toggle("is-open");
-  });
+  navToggle.addEventListener("click", () => appNav.classList.toggle("is-open"));
 }
 
 // ── Logout ────────────────────────────────────────────────
@@ -60,23 +58,22 @@ function badgeHTML(status) {
   return `<span class="badge ${cls}">${esc(s)}</span>`;
 }
 
+function paymentBadgeHTML(paymentStatus) {
+  return paymentStatus === "paid"
+    ? `<span class="badge badge-completed">Paid</span>`
+    : `<span class="badge badge-pending">Unpaid</span>`;
+}
+
 // ── Auth guard ────────────────────────────────────────────
 onAuthStateChanged(auth, async (user) => {
-  if (!user) {
-    window.location.href = "auth.html";
-    return;
-  }
+  if (!user) { window.location.href = "auth.html"; return; }
 
   try {
     const userDoc = await getDoc(doc(db, "users", user.uid));
-    if (!userDoc.exists()) {
-      window.location.href = "auth.html";
-      return;
-    }
+    if (!userDoc.exists()) { window.location.href = "auth.html"; return; }
 
     const profile = userDoc.data();
-    const name = profile.displayName || user.displayName || "User";
-    welcomeName.textContent = `Welcome, ${name}`;
+    welcomeName.textContent = `Welcome, ${profile.displayName || user.displayName || "User"}`;
     welcomeInfo.textContent = `${profile.company || ""} · ${profile.email || user.email}`;
 
     if (profile.role === "admin") {
@@ -86,24 +83,16 @@ onAuthStateChanged(auth, async (user) => {
     loading.style.display = "none";
     content.style.display = "block";
 
-    if (profile.status === "pending") {
-      pendingBanner.style.display = "block";
-      return;
-    }
+    if (profile.status === "pending") { pendingBanner.style.display = "block"; return; }
+    if (profile.status === "rejected") { rejectedBanner.style.display = "block"; return; }
 
-    if (profile.status === "rejected") {
-      rejectedBanner.style.display = "block";
-      return;
-    }
-
-    // Approved — show full dashboard
-    statsSection.style.display = "";
+    statsSection.style.display    = "";
     bookingsSection.style.display = "";
-    resultsSection.style.display = "";
+    reportsSection.style.display  = "";
 
     await Promise.all([
       loadBookings(user.uid),
-      loadAllResults(user.uid)
+      loadReports(user.uid)
     ]);
   } catch (err) {
     console.error("Dashboard load error:", err);
@@ -126,8 +115,8 @@ async function loadBookings(uid) {
 
   if (snap.empty) {
     bookingsEmpty.style.display = "block";
-    document.getElementById("stat-bookings").textContent = 0;
-    document.getElementById("stat-active").textContent = 0;
+    document.getElementById("stat-bookings").textContent  = 0;
+    document.getElementById("stat-active").textContent    = 0;
     document.getElementById("stat-completed").textContent = 0;
     return;
   }
@@ -139,11 +128,11 @@ async function loadBookings(uid) {
   });
   bookings.sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
 
-  document.getElementById("stat-bookings").textContent = bookings.length;
-  document.getElementById("stat-active").textContent =
-    bookings.filter(b => ["confirmed", "in-progress"].includes((b.status || "").toLowerCase())).length;
+  document.getElementById("stat-bookings").textContent  = bookings.length;
+  document.getElementById("stat-active").textContent    =
+    bookings.filter(b => ["confirmed","in-progress"].includes(b.status)).length;
   document.getElementById("stat-completed").textContent =
-    bookings.filter(b => (b.status || "").toLowerCase() === "completed").length;
+    bookings.filter(b => b.status === "completed").length;
 
   bookingsList.innerHTML = bookings.map(b => `
     <div class="booking-card">
@@ -156,101 +145,50 @@ async function loadBookings(uid) {
         </div>
         ${b.adminNotes ? `<p style="font-size:13px;color:var(--text-soft);margin-top:8px;">Note: ${esc(b.adminNotes)}</p>` : ""}
       </div>
-      <div>${badgeHTML(b.status)}</div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+        ${badgeHTML(b.status)}
+        ${paymentBadgeHTML(b.paymentStatus)}
+      </div>
     </div>
   `).join("");
 }
 
-// ── Load all results & reports (combined) ─────────────────
-let allResultItems = [];
-
-async function loadAllResults(uid) {
-  let resultsSnap, reportsSnap;
+// ── Load reports ──────────────────────────────────────────
+async function loadReports(uid) {
+  let snap;
   try {
-    [resultsSnap, reportsSnap] = await Promise.all([
-      getDocs(query(collection(db, "results"), where("userId", "==", uid))),
-      getDocs(query(collection(db, "reports"),  where("userId", "==", uid)))
-    ]);
+    snap = await getDocs(query(collection(db, "reports"), where("userId", "==", uid)));
   } catch (err) {
-    console.error("Results query error:", err);
-    resultsList.innerHTML = `<p style="color:var(--danger);padding:16px;">Could not load results: ${err.message}</p>`;
+    console.error("Reports query error:", err);
+    reportsList.innerHTML = `<p style="color:var(--danger);padding:16px;">Could not load reports: ${err.message}</p>`;
     return;
   }
 
-  allResultItems = [];
-  resultsSnap.forEach(d => allResultItems.push({ id: d.id, _type: "result", ...d.data() }));
-  reportsSnap.forEach(d => allResultItems.push({ id: d.id, _type: "report", ...d.data() }));
-  allResultItems.sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
+  document.getElementById("stat-results").textContent = snap.size;
 
-  document.getElementById("stat-results").textContent = resultsSnap.size;
-
-  renderResultItems(allResultItems);
-
-  // Wire up search and filter
-  document.getElementById("results-search").addEventListener("input", applyResultsFilter);
-  document.getElementById("results-type-filter").addEventListener("change", applyResultsFilter);
-}
-
-function applyResultsFilter() {
-  const term  = document.getElementById("results-search").value.trim().toLowerCase();
-  const type  = document.getElementById("results-type-filter").value;
-
-  const filtered = allResultItems.filter(item => {
-    if (type !== "all" && item._type !== type) return false;
-    if (!term) return true;
-    const haystack = [
-      item.bookingCategory, item.category, item.status,
-      item.clientName, item.companyName, item.projectName, item.testId,
-      item.notes, item.bookingId,
-      formatDate(item.updatedDate || item.reportDate || item.createdAt)
-    ].filter(Boolean).join(" ").toLowerCase();
-    return haystack.includes(term);
-  });
-
-  renderResultItems(filtered);
-}
-
-function renderResultItems(items) {
-  if (items.length === 0) {
-    resultsList.innerHTML = "";
-    resultsEmpty.style.display = "block";
+  if (snap.empty) {
+    reportsEmpty.style.display = "block";
     return;
   }
-  resultsEmpty.style.display = "none";
 
-  resultsList.innerHTML = items.map(item => {
-    if (item._type === "result") {
-      return `
-        <div class="result-card">
-          <div class="result-header">
-            <h4>${esc(item.bookingCategory || item.category || "Booking")}</h4>
-            <div style="display:flex;gap:8px;align-items:center;">
-              <span style="font-size:11px;background:var(--info-bg);color:var(--info);padding:2px 8px;border-radius:10px;font-weight:600;">Booking Status</span>
-              ${badgeHTML(item.status || "pending")}
-            </div>
-          </div>
-          <div class="booking-meta">
-            <span>Updated: ${formatDate(item.updatedDate || item.createdAt)}</span>
-            ${item.bookingId ? `<span>Booking ID: ${esc(item.bookingId.slice(0,8))}</span>` : ""}
-          </div>
-          ${item.notes ? `<p style="margin-top:12px;font-size:14px;">${esc(item.notes)}</p>` : ""}
-        </div>`;
-    } else {
-      return `
-        <div class="result-card">
-          <div class="result-header">
-            <h4>${esc(item.clientName || item.companyName || "Report")}</h4>
-            <span style="font-size:11px;background:var(--success-bg);color:var(--success);padding:2px 8px;border-radius:10px;font-weight:600;">Report</span>
-          </div>
-          <div class="booking-meta">
-            ${item.companyName ? `<span>Company: ${esc(item.companyName)}</span>` : ""}
-            ${item.projectName ? `<span>Project: ${esc(item.projectName)}</span>` : ""}
-            ${item.testId      ? `<span>Test ID: ${esc(item.testId)}</span>`      : ""}
-            <span>Date: ${formatDate(item.reportDate || item.createdAt)}</span>
-          </div>
-          ${item.notes ? `<p style="margin-top:12px;font-size:14px;">${esc(item.notes)}</p>` : ""}
-          ${item.fileUrl ? `<a href="${esc(item.fileUrl)}" target="_blank" class="btn btn-secondary btn-sm" style="margin-top:12px;">View Report</a>` : ""}
-        </div>`;
-    }
-  }).join("");
+  const reports = [];
+  snap.forEach(d => reports.push({ id: d.id, ...d.data() }));
+  reports.sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
+
+  reportsList.innerHTML = reports.map(r => `
+    <div class="result-card">
+      <div class="result-header">
+        <h4>${esc(r.clientName || r.companyName || "Report")}</h4>
+        <span style="font-size:11px;background:var(--success-bg);color:var(--success);padding:2px 8px;border-radius:10px;font-weight:600;">Report</span>
+      </div>
+      <div class="booking-meta">
+        ${r.companyName ? `<span>Company: ${esc(r.companyName)}</span>` : ""}
+        ${r.projectName ? `<span>Project: ${esc(r.projectName)}</span>` : ""}
+        ${r.testId      ? `<span>Test ID: ${esc(r.testId)}</span>`      : ""}
+        <span>Date: ${formatDate(r.reportDate || r.createdAt)}</span>
+      </div>
+      ${r.notes ? `<p style="margin-top:12px;font-size:14px;">${esc(r.notes)}</p>` : ""}
+      ${r.fileUrl ? `<a href="${esc(r.fileUrl)}" target="_blank" class="btn btn-secondary btn-sm" style="margin-top:12px;">View Report</a>` : ""}
+    </div>
+  `).join("");
 }

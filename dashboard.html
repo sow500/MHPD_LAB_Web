@@ -47,7 +47,7 @@
     <!-- Content (hidden until loaded) -->
     <div id="content" style="display:none;">
 
-      <!-- Pending banner (shown if not approved) -->
+      <!-- Pending banner -->
       <div id="pending-banner" class="pending-banner" style="display:none;">
         <h3>Account Pending Approval</h3>
         <p>Your registration is being reviewed by our team. You will gain full access once approved. Please check back later.</p>
@@ -81,14 +81,14 @@
         </div>
         <div class="stat-card">
           <div class="stat-value" id="stat-results">0</div>
-          <div class="stat-label">Status Updates</div>
+          <div class="stat-label">Reports</div>
         </div>
       </div>
 
-      <!-- Bookings section -->
+      <!-- My Booking Status section -->
       <section id="bookings-section" style="display:none;">
         <div class="section-header">
-          <h2 class="section-title">My Bookings</h2>
+          <h2 class="section-title">My Booking Status</h2>
           <a href="booking.html" class="btn btn-primary btn-sm">+ New Booking</a>
         </div>
         <div id="bookings-list" class="booking-list"></div>
@@ -98,30 +98,20 @@
         </div>
       </section>
 
-      <!-- Combined Booking Status & Reports section -->
-      <section id="results-section" style="display:none; margin-top:40px;">
+      <!-- My Reports section -->
+      <section id="reports-section" style="display:none; margin-top:40px;">
         <div class="section-header">
-          <h2 class="section-title">My Booking Status &amp; Reports</h2>
+          <h2 class="section-title">My Reports</h2>
         </div>
-        <div style="margin-bottom:16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-          <input type="text" id="results-search" class="form-input"
-            style="flex:1;min-width:200px;"
-            placeholder="Search by booking, status, date, project…">
-          <select id="results-type-filter" class="form-select" style="width:160px;">
-            <option value="all">All Types</option>
-            <option value="result">Booking Status</option>
-            <option value="report">Reports</option>
-          </select>
-        </div>
-        <div id="results-list" class="booking-list"></div>
-        <div id="results-empty" class="empty-state" style="display:none;">
-          <p>No status updates or reports available yet.</p>
+        <div id="reports-list" class="booking-list"></div>
+        <div id="reports-empty" class="empty-state" style="display:none;">
+          <p>No reports available yet.</p>
         </div>
       </section>
 
     </div>
   </main>
 
-  <script type="module" src="dashboard.js?v=9"></script>
+  <script type="module" src="dashboard.js?v=10"></script>
 </body>
 </html>
