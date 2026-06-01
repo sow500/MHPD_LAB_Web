@@ -547,10 +547,12 @@ function renderReportsTable(reports) {
     </div>`;
 }
 
-document.getElementById("reports-search").addEventListener("input", function () {
-  const q = this.value.trim().toLowerCase();
-  if (!q) { renderReportsTable(allReports); return; }
-  const filtered = allReports.filter(r => {
+function applyReportsView() {
+  const q    = document.getElementById("reports-search").value.trim().toLowerCase();
+  const sort = document.getElementById("reports-sort").value;
+
+  let list = allReports.filter(r => {
+    if (!q) return true;
     const date = formatDate(r.reportDate || r.createdAt).toLowerCase();
     return (
       (r.testId      || "").toLowerCase().includes(q) ||
@@ -560,8 +562,24 @@ document.getElementById("reports-search").addEventListener("input", function () 
       date.includes(q)
     );
   });
-  renderReportsTable(filtered);
-});
+
+  list = [...list].sort((a, b) => {
+    const str = f => (f || "").toLowerCase();
+    const ts  = r => (r.reportDate || r.createdAt)?.toMillis?.() ?? 0;
+    if (sort === "date-desc")    return ts(b) - ts(a);
+    if (sort === "date-asc")     return ts(a) - ts(b);
+    if (sort === "client-asc")   return str(a.clientName || a.userEmail).localeCompare(str(b.clientName || b.userEmail));
+    if (sort === "client-desc")  return str(b.clientName || b.userEmail).localeCompare(str(a.clientName || a.userEmail));
+    if (sort === "company-asc")  return str(a.companyName).localeCompare(str(b.companyName));
+    if (sort === "testid-asc")   return str(a.testId).localeCompare(str(b.testId));
+    return 0;
+  });
+
+  renderReportsTable(list);
+}
+
+document.getElementById("reports-search").addEventListener("input", applyReportsView);
+document.getElementById("reports-sort").addEventListener("change", applyReportsView);
 
 async function loadReports() {
   const snap = await getDocs(query(collection(db, "reports"), orderBy("createdAt", "desc")));
@@ -575,8 +593,9 @@ async function loadReports() {
   allReports = [];
   snap.forEach(d => allReports.push({ id: d.id, ...d.data() }));
 
-  document.getElementById("reports-search-bar").style.display = "block";
+  document.getElementById("reports-search-bar").style.display = "flex";
   document.getElementById("reports-search").value = "";
+  document.getElementById("reports-sort").value = "date-desc";
   renderReportsTable(allReports);
 }
 

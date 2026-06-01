@@ -244,8 +244,16 @@
           </form>
         </div>
         <h3 style="margin-bottom:16px;">Uploaded Reports</h3>
-        <div id="reports-search-bar" style="display:none;margin-bottom:16px;">
-          <input class="form-input" id="reports-search" type="text" placeholder="Search by Test ID, Company, Client, Project, or Date…" autocomplete="off">
+        <div id="reports-search-bar" style="display:none;margin-bottom:16px;gap:10px;align-items:center;">
+          <input class="form-input" id="reports-search" type="text" placeholder="Search by Test ID, Company, Client, Project, or Date…" autocomplete="off" style="flex:1;min-width:0;">
+          <select class="form-select" id="reports-sort" style="width:190px;flex-shrink:0;">
+            <option value="date-desc">Date: Newest first</option>
+            <option value="date-asc">Date: Oldest first</option>
+            <option value="client-asc">Client: A → Z</option>
+            <option value="client-desc">Client: Z → A</option>
+            <option value="company-asc">Company: A → Z</option>
+            <option value="testid-asc">Test ID: A → Z</option>
+          </select>
         </div>
         <div id="reports-admin-loading" class="loading-spinner"><div class="spinner"></div></div>
         <div id="reports-admin-table-wrap" style="display:none;"></div>
