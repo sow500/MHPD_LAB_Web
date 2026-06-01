@@ -115,8 +115,8 @@ function bookingCardHTML(b) {
     ? b.selectedTests.join(", ") : null;
   return `
     <div class="booking-card expandable" onclick="toggleExpand(this)">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
-        <div class="booking-info" style="flex:1;">
+      <div style="display:grid;grid-template-columns:1fr auto 28px;align-items:center;gap:16px;">
+        <div class="booking-info">
           <h4>${esc(b.category)} — ${esc(b.testDescription)}</h4>
           <div class="booking-meta">
             <span>Samples: ${esc(String(b.quantity || 1))}</span>
@@ -124,7 +124,7 @@ function bookingCardHTML(b) {
             <span>Booked: ${formatDate(b.createdAt)}</span>
           </div>
         </div>
-        <div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex-shrink:0;">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
           ${badgeHTML(b.status)}
           ${paymentBadgeHTML(b.paymentStatus)}
         </div>
