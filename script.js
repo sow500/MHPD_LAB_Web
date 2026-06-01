@@ -407,10 +407,31 @@ document.querySelectorAll(".person-tab").forEach((tab) => {
 // Total test count — script tag (JSONP) via Apps Script Web App
 window._testCountCb = function(data) {
   const n = data && data.count;
-  if (typeof n === 'number') {
-    const el = document.getElementById('total-tests-count');
-    if (el) el.textContent = Math.round(n).toLocaleString() + '+';
+  if (typeof n !== 'number') return;
+  const target = Math.round(n);
+  const el   = document.getElementById('total-tests-count');
+  const card = document.getElementById('stat-count-card');
+  if (!el || !card) return;
+
+  function runAnimation() {
+    const duration = 2000;
+    const start = performance.now();
+    function step(now) {
+      const p    = Math.min((now - start) / duration, 1);
+      const ease = 1 - Math.pow(1 - p, 4); // easeOutQuart
+      el.textContent = Math.round(ease * target).toLocaleString() + '+';
+      if (p < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
   }
+
+  const observer = new IntersectionObserver(function(entries) {
+    if (entries[0].isIntersecting) {
+      runAnimation();
+      observer.disconnect();
+    }
+  }, { threshold: 0.4 });
+  observer.observe(card);
 };
 (function() {
   const s = document.createElement('script');
