@@ -315,13 +315,12 @@ function bookingRowHTML(b, showStatus) {
         </select>
       </td>
       <td>
-        <div style="display:flex;flex-wrap:wrap;gap:4px;">
-          ${["pending","confirmed","in-progress","completed","cancelled"].map(s => {
-            const cls = s.replace(/-/g, "");
-            const active = b.status === s ? "stab-active" : "";
-            return `<button class="stab stab-${cls} ${active}" onclick="window._updateBooking('${b.id}','${s}')">${s}</button>`;
-          }).join("")}
-        </div>
+        <select class="form-select" style="font-size:13px;padding:6px 10px;min-width:130px;"
+          onchange="window._updateBooking('${b.id}', this.value)">
+          ${["pending","confirmed","in-progress","completed","cancelled"].map(s =>
+            `<option value="${s}" ${b.status === s ? "selected" : ""}>${s}</option>`
+          ).join("")}
+        </select>
       </td>
     </tr>`;
 }
@@ -376,6 +375,18 @@ function applyBookingsView() {
   renderBookingTable(list, "bookings-table-wrap", "bookings-no-match", true);
 }
 
+function applyPendingBookingsView() {
+  const source = allBookings.filter(b => (b.status || "").trim().toLowerCase() === "pending");
+  const list   = filterSortBookings(source, "pending-bookings-search", "pending-bookings-sort");
+  renderBookingTable(list, "pending-bookings-table-wrap", "pending-bookings-no-match", false);
+}
+
+function applyConfirmedView() {
+  const source = allBookings.filter(b => (b.status || "").trim().toLowerCase() === "confirmed");
+  const list   = filterSortBookings(source, "confirmed-search", "confirmed-sort");
+  renderBookingTable(list, "confirmed-table-wrap", "confirmed-no-match", false);
+}
+
 function applyInProgressView() {
   const source = allBookings.filter(b => (b.status || "").trim().toLowerCase() === "in-progress");
   const list   = filterSortBookings(source, "inprogress-search", "inprogress-sort");
@@ -388,12 +399,24 @@ function applyCompletedView() {
   renderBookingTable(list, "completed-table-wrap", "completed-no-match", false);
 }
 
+function applyCancelledView() {
+  const source = allBookings.filter(b => (b.status || "").trim().toLowerCase() === "cancelled");
+  const list   = filterSortBookings(source, "cancelled-search", "cancelled-sort");
+  renderBookingTable(list, "cancelled-table-wrap", "cancelled-no-match", false);
+}
+
 document.getElementById("bookings-search").addEventListener("input", applyBookingsView);
 document.getElementById("bookings-sort").addEventListener("change", applyBookingsView);
+document.getElementById("pending-bookings-search").addEventListener("input", applyPendingBookingsView);
+document.getElementById("pending-bookings-sort").addEventListener("change", applyPendingBookingsView);
+document.getElementById("confirmed-search").addEventListener("input", applyConfirmedView);
+document.getElementById("confirmed-sort").addEventListener("change", applyConfirmedView);
 document.getElementById("inprogress-search").addEventListener("input", applyInProgressView);
 document.getElementById("inprogress-sort").addEventListener("change", applyInProgressView);
 document.getElementById("completed-search").addEventListener("input", applyCompletedView);
 document.getElementById("completed-sort").addEventListener("change", applyCompletedView);
+document.getElementById("cancelled-search").addEventListener("input", applyCancelledView);
+document.getElementById("cancelled-sort").addEventListener("change", applyCancelledView);
 
 async function loadBookings() {
   const snap = await getDocs(query(collection(db, "bookings"), orderBy("createdAt", "desc")));
@@ -401,44 +424,40 @@ async function loadBookings() {
   snap.forEach(d => allBookings.push({ id: d.id, ...d.data() }));
 
   const active     = allBookings.filter(b => !["completed","cancelled"].includes((b.status || "").trim().toLowerCase()));
+  const pending    = allBookings.filter(b => (b.status || "").trim().toLowerCase() === "pending");
+  const confirmed  = allBookings.filter(b => (b.status || "").trim().toLowerCase() === "confirmed");
   const inProgress = allBookings.filter(b => (b.status || "").trim().toLowerCase() === "in-progress");
   const completed  = allBookings.filter(b => (b.status || "").trim().toLowerCase() === "completed");
+  const cancelled  = allBookings.filter(b => (b.status || "").trim().toLowerCase() === "cancelled");
+  const paid       = allBookings.filter(b => b.paymentStatus === "paid");
 
-  const paid = allBookings.filter(b => b.paymentStatus === "paid");
-  document.getElementById("a-stat-bookings").textContent     = active.length;
-  document.getElementById("a-stat-results").textContent      = paid.length;
-  document.getElementById("tab-count-bookings").textContent  = allBookings.length;
-  document.getElementById("tab-count-inprogress").textContent = inProgress.length;
-  document.getElementById("tab-count-completed").textContent  = completed.length;
-  document.getElementById("bookings-loading").style.display  = "none";
+  document.getElementById("a-stat-bookings").textContent            = active.length;
+  document.getElementById("a-stat-results").textContent             = paid.length;
+  document.getElementById("tab-count-bookings").textContent         = allBookings.length;
+  document.getElementById("tab-count-pending-bookings").textContent = pending.length;
+  document.getElementById("tab-count-confirmed").textContent        = confirmed.length;
+  document.getElementById("tab-count-inprogress").textContent       = inProgress.length;
+  document.getElementById("tab-count-completed").textContent        = completed.length;
+  document.getElementById("tab-count-cancelled").textContent        = cancelled.length;
+  document.getElementById("bookings-loading").style.display         = "none";
 
-  if (allBookings.length === 0) {
-    document.getElementById("bookings-empty").style.display = "block";
-  } else {
-    document.getElementById("bookings-empty").style.display = "none";
-    showBar("bookings-search-bar");
-    resetBar("bookings-search", "bookings-sort", "date-desc");
-    renderBookingTable(allBookings, "bookings-table-wrap", "bookings-no-match", true);
+  function populatePanel(list, emptyId, barId, searchId, sortId, wrapId, noMatchId, showStatus) {
+    if (list.length === 0) {
+      document.getElementById(emptyId).style.display = "block";
+    } else {
+      document.getElementById(emptyId).style.display = "none";
+      showBar(barId);
+      resetBar(searchId, sortId, "date-desc");
+      renderBookingTable(list, wrapId, noMatchId, showStatus);
+    }
   }
 
-  if (inProgress.length === 0) {
-    document.getElementById("inprogress-empty").style.display = "block";
-  } else {
-    document.getElementById("inprogress-empty").style.display = "none";
-    showBar("inprogress-search-bar");
-    resetBar("inprogress-search", "inprogress-sort", "date-desc");
-    renderBookingTable(inProgress, "inprogress-table-wrap", "inprogress-no-match", false);
-  }
-
-  if (completed.length === 0) {
-    document.getElementById("completed-empty").style.display = "block";
-  } else {
-    document.getElementById("completed-empty").style.display = "none";
-    showBar("completed-search-bar");
-    resetBar("completed-search", "completed-sort", "date-desc");
-    renderBookingTable(completed, "completed-table-wrap", "completed-no-match", false);
-  }
-
+  populatePanel(allBookings, "bookings-empty",         "bookings-search-bar",         "bookings-search",         "bookings-sort",         "bookings-table-wrap",         "bookings-no-match",         true);
+  populatePanel(pending,     "pending-bookings-empty", "pending-bookings-search-bar", "pending-bookings-search", "pending-bookings-sort", "pending-bookings-table-wrap", "pending-bookings-no-match", false);
+  populatePanel(confirmed,   "confirmed-empty",        "confirmed-search-bar",        "confirmed-search",        "confirmed-sort",        "confirmed-table-wrap",        "confirmed-no-match",        false);
+  populatePanel(inProgress,  "inprogress-empty",       "inprogress-search-bar",       "inprogress-search",       "inprogress-sort",       "inprogress-table-wrap",       "inprogress-no-match",       false);
+  populatePanel(completed,   "completed-empty",        "completed-search-bar",        "completed-search",        "completed-sort",        "completed-table-wrap",        "completed-no-match",        false);
+  populatePanel(cancelled,   "cancelled-empty",        "cancelled-search-bar",        "cancelled-search",        "cancelled-sort",        "cancelled-table-wrap",        "cancelled-no-match",        false);
 }
 
 window._updateBooking = async function (bookingId, newStatus) {

@@ -81,11 +81,20 @@
         <button class="admin-tab" data-panel="bookings">
           Total Bookings<span class="tab-count" id="tab-count-bookings">0</span>
         </button>
+        <button class="admin-tab" data-panel="pending-bookings">
+          Pending<span class="tab-count" id="tab-count-pending-bookings">0</span>
+        </button>
+        <button class="admin-tab" data-panel="confirmed">
+          Confirmed<span class="tab-count" id="tab-count-confirmed">0</span>
+        </button>
         <button class="admin-tab" data-panel="in-progress">
           In-Progress<span class="tab-count" id="tab-count-inprogress">0</span>
         </button>
         <button class="admin-tab" data-panel="completed">
           Completed<span class="tab-count" id="tab-count-completed">0</span>
+        </button>
+        <button class="admin-tab" data-panel="cancelled">
+          Cancelled<span class="tab-count" id="tab-count-cancelled">0</span>
         </button>
         <button class="admin-tab" data-panel="reports">Reports</button>
         <button class="admin-tab" data-panel="all-users">All Users</button>
@@ -175,6 +184,69 @@
         </div>
         <div id="completed-no-match" class="empty-state" style="display:none;">
           <p>No completed bookings match your search.</p>
+        </div>
+      </div>
+
+      <!-- PANEL: Pending Bookings -->
+      <div class="admin-panel" id="panel-pending-bookings">
+        <div id="pending-bookings-search-bar" style="display:none;margin-bottom:16px;gap:10px;align-items:center;">
+          <input class="form-input" id="pending-bookings-search" type="text" placeholder="Search by Client, Category, or Date…" autocomplete="off" style="flex:1;min-width:0;">
+          <select class="form-select" id="pending-bookings-sort" style="width:210px;flex-shrink:0;">
+            <option value="date-desc">Date: Newest first</option>
+            <option value="date-asc">Date: Oldest first</option>
+            <option value="client-asc">Client: A → Z</option>
+            <option value="client-desc">Client: Z → A</option>
+            <option value="category-asc">Category: A → Z</option>
+          </select>
+        </div>
+        <div id="pending-bookings-table-wrap" style="display:none;"></div>
+        <div id="pending-bookings-empty" class="empty-state" style="display:none;">
+          <p>No pending bookings.</p>
+        </div>
+        <div id="pending-bookings-no-match" class="empty-state" style="display:none;">
+          <p>No pending bookings match your search.</p>
+        </div>
+      </div>
+
+      <!-- PANEL: Confirmed Bookings -->
+      <div class="admin-panel" id="panel-confirmed">
+        <div id="confirmed-search-bar" style="display:none;margin-bottom:16px;gap:10px;align-items:center;">
+          <input class="form-input" id="confirmed-search" type="text" placeholder="Search by Client, Category, or Date…" autocomplete="off" style="flex:1;min-width:0;">
+          <select class="form-select" id="confirmed-sort" style="width:210px;flex-shrink:0;">
+            <option value="date-desc">Date: Newest first</option>
+            <option value="date-asc">Date: Oldest first</option>
+            <option value="client-asc">Client: A → Z</option>
+            <option value="client-desc">Client: Z → A</option>
+            <option value="category-asc">Category: A → Z</option>
+          </select>
+        </div>
+        <div id="confirmed-table-wrap" style="display:none;"></div>
+        <div id="confirmed-empty" class="empty-state" style="display:none;">
+          <p>No confirmed bookings.</p>
+        </div>
+        <div id="confirmed-no-match" class="empty-state" style="display:none;">
+          <p>No confirmed bookings match your search.</p>
+        </div>
+      </div>
+
+      <!-- PANEL: Cancelled Bookings -->
+      <div class="admin-panel" id="panel-cancelled">
+        <div id="cancelled-search-bar" style="display:none;margin-bottom:16px;gap:10px;align-items:center;">
+          <input class="form-input" id="cancelled-search" type="text" placeholder="Search by Client, Category, or Date…" autocomplete="off" style="flex:1;min-width:0;">
+          <select class="form-select" id="cancelled-sort" style="width:210px;flex-shrink:0;">
+            <option value="date-desc">Date: Newest first</option>
+            <option value="date-asc">Date: Oldest first</option>
+            <option value="client-asc">Client: A → Z</option>
+            <option value="client-desc">Client: Z → A</option>
+            <option value="category-asc">Category: A → Z</option>
+          </select>
+        </div>
+        <div id="cancelled-table-wrap" style="display:none;"></div>
+        <div id="cancelled-empty" class="empty-state" style="display:none;">
+          <p>No cancelled bookings.</p>
+        </div>
+        <div id="cancelled-no-match" class="empty-state" style="display:none;">
+          <p>No cancelled bookings match your search.</p>
         </div>
       </div>
 
@@ -276,6 +348,6 @@
     </div>
   </main>
 
-  <script type="module" src="admin.js?v=18"></script>
+  <script type="module" src="admin.js?v=19"></script>
 </body>
 </html>
