@@ -431,8 +431,8 @@ async function loadBookings() {
   }
 
   const bookingSel = document.getElementById("res-booking");
-  bookingSel.innerHTML = '<option value="">No linked booking</option>';
-  allBookings.forEach(b => {
+  bookingSel.innerHTML = '<option value="">Select booking…</option>';
+  allBookings.filter(b => b.status !== "cancelled").forEach(b => {
     bookingSel.innerHTML += `<option value="${b.id}">${esc(b.userName)} — ${esc(b.category)} (${formatDate(b.createdAt)})</option>`;
   });
 }
@@ -465,17 +465,16 @@ function renderResultsTable(results) {
     <div class="table-wrap">
       <table class="data-table">
         <thead>
-          <tr><th>Date</th><th>User</th><th>Test Name</th><th>Sample</th><th>Summary</th><th>Status</th></tr>
+          <tr><th>Date</th><th>User</th><th>Booking</th><th>Status</th><th>Notes</th></tr>
         </thead>
         <tbody>
           ${results.map(r => `
             <tr>
-              <td>${formatDate(r.createdAt)}</td>
+              <td>${formatDate(r.updatedDate || r.createdAt)}</td>
               <td>${esc(r.userEmail)}</td>
-              <td>${esc(r.testName)}</td>
-              <td>${esc(r.sampleType || "—")}</td>
-              <td style="max-width:250px;font-size:13px;">${esc(r.summary || "—")}</td>
-              <td>${badgeHTML(r.status || "completed")}</td>
+              <td style="font-size:13px;">${esc(r.bookingCategory || r.bookingId || "—")}</td>
+              <td>${badgeHTML(r.status || "—")}</td>
+              <td style="font-size:13px;max-width:220px;">${esc(r.notes || "—")}</td>
             </tr>
           `).join("")}
         </tbody>
@@ -487,19 +486,19 @@ function applyResultsView() {
   const q    = document.getElementById("results-search").value.trim().toLowerCase();
   const sort = document.getElementById("results-sort").value;
   const s    = f => (f || "").toLowerCase();
-  const ts   = r => r.createdAt?.toMillis?.() ?? 0;
+  const ts   = r => (r.updatedDate || r.createdAt)?.toMillis?.() ?? 0;
 
   let list = allResults.filter(r => !q || (
-    s(r.userEmail).includes(q)  || s(r.testName).includes(q) ||
-    s(r.sampleType).includes(q) || s(r.summary).includes(q)  ||
-    formatDate(r.createdAt).toLowerCase().includes(q)
+    s(r.userEmail).includes(q)        || s(r.bookingCategory).includes(q) ||
+    s(r.status).includes(q)           || s(r.notes).includes(q)           ||
+    formatDate(r.updatedDate || r.createdAt).toLowerCase().includes(q)
   ));
 
   list = [...list].sort((a, b) => {
-    if (sort === "date-desc")    return ts(b) - ts(a);
-    if (sort === "date-asc")     return ts(a) - ts(b);
-    if (sort === "user-asc")     return s(a.userEmail).localeCompare(s(b.userEmail));
-    if (sort === "testname-asc") return s(a.testName).localeCompare(s(b.testName));
+    if (sort === "date-desc")   return ts(b) - ts(a);
+    if (sort === "date-asc")    return ts(a) - ts(b);
+    if (sort === "user-asc")    return s(a.userEmail).localeCompare(s(b.userEmail));
+    if (sort === "status-asc")  return s(a.status).localeCompare(s(b.status));
     return 0;
   });
 
@@ -527,20 +526,7 @@ async function loadResults() {
   renderResultsTable(allResults);
 }
 
-// ── Add result-data field rows ────────────────────────────
-document.getElementById("add-field-btn").addEventListener("click", () => {
-  const container = document.getElementById("result-fields");
-  const row = document.createElement("div");
-  row.className = "form-row";
-  row.style.marginBottom = "8px";
-  row.innerHTML = `
-    <input class="form-input" type="text" placeholder="Parameter name" data-role="key">
-    <input class="form-input" type="text" placeholder="Value" data-role="value">
-  `;
-  container.appendChild(row);
-});
-
-// ── Submit result ─────────────────────────────────────────
+// ── Submit booking status ─────────────────────────────────
 const resultForm  = document.getElementById("result-form");
 const resultAlert = document.getElementById("result-alert");
 
@@ -548,63 +534,50 @@ resultForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   resultAlert.className = "alert";
 
-  const userSelect = document.getElementById("res-user");
-  const userId     = userSelect.value;
-  const userEmail  = userSelect.selectedOptions[0]?.dataset?.email || "";
-  const bookingId  = document.getElementById("res-booking").value;
-  const testName   = document.getElementById("res-test-name").value.trim();
-  const sampleType = document.getElementById("res-sample-type").value.trim();
-  const summary    = document.getElementById("res-summary").value.trim();
-  const testedDate = document.getElementById("res-tested-date").value;
-  const reportUrl  = document.getElementById("res-report-url").value.trim();
+  const userSelect      = document.getElementById("res-user");
+  const userId          = userSelect.value;
+  const userEmail       = userSelect.selectedOptions[0]?.dataset?.email || "";
+  const bookingId       = document.getElementById("res-booking").value;
+  const status          = document.getElementById("res-status").value;
+  const notes           = document.getElementById("res-notes").value.trim();
+  const dateVal         = document.getElementById("res-date").value;
 
-  if (!userId || !testName || !summary) {
+  if (!userId || !bookingId || !status) {
     resultAlert.textContent = "Please fill in all required fields.";
     resultAlert.className   = "alert alert-danger show";
     return;
   }
 
-  const resultData = {};
-  document.querySelectorAll("#result-fields .form-row").forEach(row => {
-    const key = row.querySelector('[data-role="key"]').value.trim();
-    const val = row.querySelector('[data-role="value"]').value.trim();
-    if (key) resultData[key] = val;
-  });
+  const booking         = allBookings.find(b => b.id === bookingId);
+  const bookingCategory = booking?.category || "";
 
   const submitBtn = document.getElementById("result-submit-btn");
   submitBtn.disabled    = true;
-  submitBtn.textContent = "Publishing…";
+  submitBtn.textContent = "Saving…";
 
   try {
     await addDoc(collection(db, "results"), {
-      userId, userEmail, bookingId: bookingId || "",
-      testName, sampleType, summary, resultData,
-      testedDate: testedDate ? Timestamp.fromDate(new Date(testedDate)) : null,
-      reportUrl, status: "completed", createdAt: serverTimestamp()
+      userId, userEmail, bookingId,
+      bookingCategory, status, notes,
+      updatedDate: dateVal ? Timestamp.fromDate(new Date(dateVal)) : null,
+      createdAt: serverTimestamp()
     });
 
-    if (bookingId) {
-      await updateDoc(doc(db, "bookings", bookingId), { status: "completed" });
-    }
+    await updateDoc(doc(db, "bookings", bookingId), { status });
 
-    resultAlert.textContent = "Result published successfully!";
+    resultAlert.textContent = "Booking status saved!";
     resultAlert.className   = "alert alert-success show";
     resultForm.reset();
-    document.getElementById("result-fields").innerHTML = `
-      <div class="form-row" style="margin-bottom:8px;">
-        <input class="form-input" type="text" placeholder="Parameter name" data-role="key">
-        <input class="form-input" type="text" placeholder="Value" data-role="value">
-      </div>`;
-
     await loadResults();
+    await loadBookings();
   } catch (err) {
-    console.error("Result publish error:", err);
-    resultAlert.textContent = "Failed to publish result: " + err.message;
+    console.error("Status save error:", err);
+    resultAlert.textContent = "Failed to save status: " + err.message;
     resultAlert.className   = "alert alert-danger show";
   }
 
   submitBtn.disabled    = false;
-  submitBtn.textContent = "Publish Result";
+  submitBtn.textContent = "Save Status";
 });
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

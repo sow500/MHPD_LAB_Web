@@ -81,7 +81,7 @@
         </div>
         <div class="stat-card">
           <div class="stat-value" id="stat-results">0</div>
-          <div class="stat-label">Results Ready</div>
+          <div class="stat-label">Status Updates</div>
         </div>
       </div>
 
@@ -98,24 +98,24 @@
         </div>
       </section>
 
-      <!-- Combined Results & Reports section -->
+      <!-- Combined Booking Status & Reports section -->
       <section id="results-section" style="display:none; margin-top:40px;">
         <div class="section-header">
-          <h2 class="section-title">My Results &amp; Reports</h2>
+          <h2 class="section-title">My Booking Status &amp; Reports</h2>
         </div>
         <div style="margin-bottom:16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
           <input type="text" id="results-search" class="form-input"
             style="flex:1;min-width:200px;"
-            placeholder="Search by name, sample type, date, project…">
+            placeholder="Search by booking, status, date, project…">
           <select id="results-type-filter" class="form-select" style="width:160px;">
             <option value="all">All Types</option>
-            <option value="result">Test Results</option>
+            <option value="result">Booking Status</option>
             <option value="report">Reports</option>
           </select>
         </div>
         <div id="results-list" class="booking-list"></div>
         <div id="results-empty" class="empty-state" style="display:none;">
-          <p>No results or reports available yet.</p>
+          <p>No status updates or reports available yet.</p>
         </div>
       </section>
 

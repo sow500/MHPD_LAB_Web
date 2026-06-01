@@ -199,10 +199,10 @@ function applyResultsFilter() {
     if (type !== "all" && item._type !== type) return false;
     if (!term) return true;
     const haystack = [
-      item.testName, item.sampleType, item.summary, item.category,
+      item.bookingCategory, item.category, item.status,
       item.clientName, item.companyName, item.projectName, item.testId,
-      item.notes, item.userCompany, item.userName, item.bookingId, item.id,
-      formatDate(item.testedDate || item.reportDate || item.createdAt)
+      item.notes, item.bookingId,
+      formatDate(item.updatedDate || item.reportDate || item.createdAt)
     ].filter(Boolean).join(" ").toLowerCase();
     return haystack.includes(term);
   });
@@ -220,31 +220,20 @@ function renderResultItems(items) {
 
   resultsList.innerHTML = items.map(item => {
     if (item._type === "result") {
-      let detailsHTML = "";
-      if (item.resultData && typeof item.resultData === "object") {
-        detailsHTML = `<div class="result-details">
-          ${Object.entries(item.resultData).map(([k, v]) => `
-            <div class="result-field"><label>${esc(k)}</label><span>${esc(String(v))}</span></div>
-          `).join("")}
-        </div>`;
-      }
       return `
         <div class="result-card">
           <div class="result-header">
-            <h4>${esc(item.testName || item.category || "Test Result")}</h4>
+            <h4>${esc(item.bookingCategory || item.category || "Booking")}</h4>
             <div style="display:flex;gap:8px;align-items:center;">
-              <span style="font-size:11px;background:var(--info-bg);color:var(--info);padding:2px 8px;border-radius:10px;font-weight:600;">Result</span>
-              ${badgeHTML(item.status || "completed")}
+              <span style="font-size:11px;background:var(--info-bg);color:var(--info);padding:2px 8px;border-radius:10px;font-weight:600;">Booking Status</span>
+              ${badgeHTML(item.status || "pending")}
             </div>
           </div>
           <div class="booking-meta">
-            <span>Sample: ${esc(item.sampleType || "—")}</span>
-            <span>Tested: ${formatDate(item.testedDate)}</span>
-            ${item.id ? `<span>ID: ${esc(item.id.slice(0,8))}</span>` : ""}
+            <span>Updated: ${formatDate(item.updatedDate || item.createdAt)}</span>
+            ${item.bookingId ? `<span>Booking ID: ${esc(item.bookingId.slice(0,8))}</span>` : ""}
           </div>
-          ${item.summary ? `<p style="margin-top:12px;font-size:14px;">${esc(item.summary)}</p>` : ""}
-          ${detailsHTML}
-          ${item.reportUrl ? `<a href="${esc(item.reportUrl)}" target="_blank" class="btn btn-secondary btn-sm" style="margin-top:12px;">Download Report</a>` : ""}
+          ${item.notes ? `<p style="margin-top:12px;font-size:14px;">${esc(item.notes)}</p>` : ""}
         </div>`;
     } else {
       return `
