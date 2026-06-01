@@ -315,12 +315,13 @@ function bookingRowHTML(b, showStatus) {
         </select>
       </td>
       <td>
-        <select class="form-select" style="font-size:13px;padding:6px 10px;min-width:130px;"
-          onchange="window._updateBooking('${b.id}', this.value)">
-          ${["pending","confirmed","in-progress","completed","cancelled"].map(s =>
-            `<option value="${s}" ${b.status === s ? "selected" : ""}>${s}</option>`
-          ).join("")}
-        </select>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;">
+          ${["pending","confirmed","in-progress","completed","cancelled"].map(s => {
+            const cls = s.replace(/-/g, "");
+            const active = b.status === s ? "stab-active" : "";
+            return `<button class="stab stab-${cls} ${active}" onclick="window._updateBooking('${b.id}','${s}')">${s}</button>`;
+          }).join("")}
+        </div>
       </td>
     </tr>`;
 }

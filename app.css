@@ -552,6 +552,26 @@ body {
   color: var(--info);
 }
 
+/* ── Status tab buttons (admin actions) ─────────────────── */
+.stab {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1.5px solid var(--line);
+  cursor: pointer;
+  background: transparent;
+  color: var(--text-soft);
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+.stab:hover { border-color: var(--line-strong); color: var(--text); }
+.stab-pending.stab-active      { background: var(--warning-bg); color: var(--warning); border-color: var(--warning); }
+.stab-confirmed.stab-active    { background: var(--info-bg);    color: var(--info);    border-color: var(--info); }
+.stab-inprogress.stab-active   { background: var(--info-bg);    color: var(--info);    border-color: var(--info); }
+.stab-completed.stab-active    { background: var(--success-bg); color: var(--success); border-color: var(--success); }
+.stab-cancelled.stab-active    { background: var(--danger-bg);  color: var(--danger);  border-color: var(--danger); }
+
 /* ── Dashboard grid ────────────────────────────────────── */
 .dash-stats {
   display: grid;
