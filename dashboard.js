@@ -319,3 +319,17 @@ async function loadReports(uid) {
   document.getElementById("reports-search").addEventListener("input", applyReportsFilter);
   document.getElementById("reports-sort").addEventListener("change", applyReportsFilter);
 }
+
+// ── Key contacts tab switching ────────────────────────────
+document.querySelectorAll(".dc-tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".dc-tab").forEach(t => {
+      t.classList.remove("active");
+      t.setAttribute("aria-selected", "false");
+    });
+    document.querySelectorAll(".dc-panel").forEach(p => p.classList.remove("active"));
+    tab.classList.add("active");
+    tab.setAttribute("aria-selected", "true");
+    document.getElementById(tab.dataset.dcTab).classList.add("active");
+  });
+});
