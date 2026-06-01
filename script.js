@@ -403,3 +403,19 @@ document.querySelectorAll(".person-tab").forEach((tab) => {
     document.getElementById(targetId).classList.add("active");
   });
 });
+
+// Total test count — reads the pre-computed SUMPRODUCT formula from Summary!A1
+(async function loadTestCount() {
+  const id  = '1-7XSox9nwCKdO5bWF8Xe-79zmxNpplckRPVpxcJ_cP4';
+  const q   = encodeURIComponent('select A limit 1');
+  const sh  = encodeURIComponent('Summary');
+  const url = `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:json&sheet=${sh}&tq=${q}`;
+  try {
+    const text = await (await fetch(url)).text();
+    const json = JSON.parse(text.replace(/^[^(]+\(/, '').replace(/\);\s*$/, ''));
+    const n = json?.table?.rows?.[0]?.c?.[0]?.v;
+    if (typeof n === 'number') {
+      document.getElementById('total-tests-count').textContent = n.toLocaleString() + '+';
+    }
+  } catch { /* keep the em-dash if the sheet is unreachable */ }
+})();

@@ -593,6 +593,62 @@ body {
 .stab-completed.stab-active    { background: var(--success-bg); color: var(--success); border-color: var(--success); }
 .stab-cancelled.stab-active    { background: var(--danger-bg);  color: var(--danger);  border-color: var(--danger); }
 
+/* ── Dashboard key contacts ─────────────────────────────── */
+.dash-contacts {
+  margin-bottom: 28px;
+}
+
+.dash-contacts-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-soft);
+  margin-bottom: 10px;
+}
+
+.dash-contacts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px;
+}
+
+.dash-contact-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dash-contact-card strong {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.dash-contact-card span {
+  font-size: 11px;
+  color: var(--text-soft);
+  margin-bottom: 6px;
+}
+
+.dash-contact-card a {
+  font-size: 12px;
+  color: var(--accent);
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dash-contact-card a:hover {
+  text-decoration: underline;
+}
+
 /* ── Dashboard grid ────────────────────────────────────── */
 .dash-stats {
   display: grid;
