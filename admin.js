@@ -384,32 +384,8 @@ function renderBookingTable(bookings, wrapId, noMatchId, showStatus) {
   noMatch.style.display = "none";
   wrap.style.display    = "block";
 
-  const prefix   = wrapId.replace("-table-wrap", "");
-  const groupBy  = document.getElementById(`${prefix}-group-by`)?.value || "";
   const statusTh = showStatus ? "<th>Status</th>" : "";
-  const numCols  = showStatus ? 9 : 8;
-
-  let tbody;
-  if (groupBy === "client") {
-    const groups = {};
-    bookings.forEach(b => {
-      const key = b.userName || b.userEmail || "Unknown";
-      if (!groups[key]) groups[key] = { name: key, company: b.userCompany || "", items: [] };
-      groups[key].items.push(b);
-    });
-    tbody = Object.values(groups).map(g => `
-      <tr style="background:var(--accent-soft);">
-        <td colspan="${numCols}" style="padding:10px 16px;font-weight:700;font-size:13px;color:var(--accent);">
-          ${esc(g.name)}
-          ${g.company ? `<span style="font-weight:500;color:var(--text-soft);margin-left:6px;">(${esc(g.company)})</span>` : ""}
-          <span style="font-size:11px;font-weight:600;color:var(--text-soft);margin-left:10px;">${g.items.length} booking${g.items.length !== 1 ? "s" : ""}</span>
-        </td>
-      </tr>
-      ${g.items.map(b => bookingRowHTML(b, showStatus, wrapId)).join("")}
-    `).join("");
-  } else {
-    tbody = bookings.map(b => bookingRowHTML(b, showStatus, wrapId)).join("");
-  }
+  const tbody    = bookings.map(b => bookingRowHTML(b, showStatus, wrapId)).join("");
 
   wrap.innerHTML = `
     <div class="table-wrap">
@@ -450,14 +426,14 @@ function injectBookingFilters(prefix) {
       <option value="">All Delivery</option>
       ${dels.map(d => `<option value="${esc(d)}">${esc(d)}</option>`).join("")}
     </select>
-    <select class="form-select" id="${prefix}-group-by" style="width:160px;font-size:13px;">
-      <option value="">No Grouping</option>
-      <option value="client">Group by Client</option>
+    <select class="form-select" id="${prefix}-filter-client" style="width:160px;font-size:13px;">
+      <option value="">All Clients</option>
+      ${uniqueSorted(allBookings, "userName").map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join("")}
     </select>
     <button class="btn btn-secondary btn-sm" onclick="window._clearBookingFilters('${prefix}')">Clear</button>`;
   bar.appendChild(row);
 
-  ["filter-cat","filter-pay","filter-del","group-by"].forEach(f => {
+  ["filter-cat","filter-pay","filter-del","filter-client"].forEach(f => {
     document.getElementById(`${prefix}-${f}`)
       ?.addEventListener("change", () => window._applyBookingPanel(prefix));
   });
@@ -473,7 +449,7 @@ const _bookingApplyMap = {
 };
 window._applyBookingPanel  = prefix => _bookingApplyMap[prefix]?.();
 window._clearBookingFilters = prefix => {
-  ["filter-cat","filter-pay","filter-del","group-by"].forEach(f => {
+  ["filter-cat","filter-pay","filter-del","filter-client"].forEach(f => {
     const el = document.getElementById(`${prefix}-${f}`);
     if (el) el.value = "";
   });
@@ -484,16 +460,18 @@ function filterSortBookings(source, searchId, sortId) {
   const prefix = searchId.replace(/-search$/, "");
   const q      = document.getElementById(searchId)?.value.trim().toLowerCase() || "";
   const sort   = document.getElementById(sortId)?.value || "date-desc";
-  const catF   = document.getElementById(`${prefix}-filter-cat`)?.value || "";
-  const payF   = document.getElementById(`${prefix}-filter-pay`)?.value || "";
-  const delF   = document.getElementById(`${prefix}-filter-del`)?.value || "";
+  const catF    = document.getElementById(`${prefix}-filter-cat`)?.value    || "";
+  const payF    = document.getElementById(`${prefix}-filter-pay`)?.value    || "";
+  const delF    = document.getElementById(`${prefix}-filter-del`)?.value    || "";
+  const clientF = document.getElementById(`${prefix}-filter-client`)?.value || "";
   const s      = f => (f || "").toLowerCase();
   const ts     = b => b.createdAt?.toMillis?.() ?? 0;
 
   let list = source.filter(b => {
-    if (catF && b.category !== catF) return false;
-    if (payF && (b.paymentStatus || "unpaid") !== payF) return false;
-    if (delF && b.deliveryMethod !== delF) return false;
+    if (catF    && b.category !== catF) return false;
+    if (payF    && (b.paymentStatus || "unpaid") !== payF) return false;
+    if (delF    && b.deliveryMethod !== delF) return false;
+    if (clientF && b.userName !== clientF) return false;
     if (!q) return true;
     return (
       s(b.userName).includes(q)        || s(b.userCompany).includes(q) ||
