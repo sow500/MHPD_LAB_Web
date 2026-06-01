@@ -404,15 +404,17 @@ document.querySelectorAll(".person-tab").forEach((tab) => {
   });
 });
 
-// Total test count — fetched from Google Apps Script Web App
-(async function loadTestCount() {
-  const url = 'https://script.google.com/macros/s/AKfycbwUCVL8dMZwePJgI_cUYCaYd85QzxPLFEGnG5pgJHHeM5oS8r2VlL1s2R9aeAwGH_3bPg/exec';
-  try {
-    const data = await (await fetch(url)).json();
-    const n = data?.count;
-    if (typeof n === 'number') {
-      const el = document.getElementById('total-tests-count');
-      if (el) el.textContent = Math.round(n).toLocaleString() + '+';
-    }
-  } catch {}
+// Total test count — script tag (JSONP) via Apps Script Web App
+window._testCountCb = function(data) {
+  const n = data && data.count;
+  if (typeof n === 'number') {
+    const el = document.getElementById('total-tests-count');
+    if (el) el.textContent = Math.round(n).toLocaleString() + '+';
+  }
+};
+(function() {
+  const s = document.createElement('script');
+  s.src = 'https://script.google.com/macros/s/AKfycbwUCVL8dMZwePJgI_cUYCaYd85QzxPLFEGnG5pgJHHeM5oS8r2VlL1s2R9aeAwGH_3bPg/exec';
+  s.onerror = function() {};
+  document.head.appendChild(s);
 })();
