@@ -91,10 +91,22 @@
           <h2 class="section-title">My Booking Status</h2>
           <a href="booking.html" class="btn btn-primary btn-sm">+ New Booking</a>
         </div>
+        <div id="bookings-search-bar" style="display:none;margin-bottom:16px;gap:10px;align-items:center;">
+          <input class="form-input" id="bookings-search" type="text" placeholder="Search by category, status, date…" autocomplete="off" style="flex:1;min-width:0;">
+          <select class="form-select" id="bookings-sort" style="width:200px;flex-shrink:0;">
+            <option value="date-desc">Date: Newest first</option>
+            <option value="date-asc">Date: Oldest first</option>
+            <option value="status-asc">Status: A → Z</option>
+            <option value="category-asc">Category: A → Z</option>
+          </select>
+        </div>
         <div id="bookings-list" class="booking-list"></div>
         <div id="bookings-empty" class="empty-state" style="display:none;">
           <p>You haven't booked any tests yet.</p>
           <a href="booking.html" class="btn btn-secondary btn-sm">Book Your First Test</a>
+        </div>
+        <div id="bookings-no-match" class="empty-state" style="display:none;">
+          <p>No bookings match your search.</p>
         </div>
       </section>
 
@@ -103,15 +115,27 @@
         <div class="section-header">
           <h2 class="section-title">My Reports</h2>
         </div>
+        <div id="reports-search-bar" style="display:none;margin-bottom:16px;gap:10px;align-items:center;">
+          <input class="form-input" id="reports-search" type="text" placeholder="Search by company, project, test ID, date…" autocomplete="off" style="flex:1;min-width:0;">
+          <select class="form-select" id="reports-sort" style="width:200px;flex-shrink:0;">
+            <option value="date-desc">Date: Newest first</option>
+            <option value="date-asc">Date: Oldest first</option>
+            <option value="company-asc">Company: A → Z</option>
+            <option value="testid-asc">Test ID: Low → High</option>
+          </select>
+        </div>
         <div id="reports-list" class="booking-list"></div>
         <div id="reports-empty" class="empty-state" style="display:none;">
           <p>No reports available yet.</p>
+        </div>
+        <div id="reports-no-match" class="empty-state" style="display:none;">
+          <p>No reports match your search.</p>
         </div>
       </section>
 
     </div>
   </main>
 
-  <script type="module" src="dashboard.js?v=11"></script>
+  <script type="module" src="dashboard.js?v=12"></script>
 </body>
 </html>

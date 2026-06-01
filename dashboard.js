@@ -109,41 +109,11 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
-// ── Load bookings ─────────────────────────────────────────
-async function loadBookings(uid) {
-  let snap;
-  try {
-    snap = await getDocs(query(collection(db, "bookings"), where("userId", "==", uid)));
-  } catch (err) {
-    bookingsList.innerHTML = `<p style="color:var(--danger);padding:16px;">Could not load bookings: ${err.message}</p>`;
-    return;
-  }
-
-  if (snap.empty) {
-    bookingsEmpty.style.display = "block";
-    ["stat-bookings","stat-active","stat-completed"].forEach(id => document.getElementById(id).textContent = 0);
-    return;
-  }
-
-  const bookings = [];
-  snap.forEach(d => {
-    const data = d.data();
-    bookings.push({ id: d.id, ...data, status: (data.status || "pending").trim().toLowerCase() });
-  });
-  bookings.sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
-
-  document.getElementById("stat-bookings").textContent  = bookings.length;
-  document.getElementById("stat-active").textContent    =
-    bookings.filter(b => ["confirmed","in-progress"].includes(b.status)).length;
-  document.getElementById("stat-completed").textContent =
-    bookings.filter(b => b.status === "completed").length;
-
-  bookingsList.innerHTML = bookings.map(b => {
-    const tests = Array.isArray(b.selectedTests) && b.selectedTests.length
-      ? b.selectedTests.join(", ")
-      : null;
-
-    return `
+// ── Booking card HTML ─────────────────────────────────────
+function bookingCardHTML(b) {
+  const tests = Array.isArray(b.selectedTests) && b.selectedTests.length
+    ? b.selectedTests.join(", ") : null;
+  return `
     <div class="booking-card expandable" onclick="toggleExpand(this)">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
         <div class="booking-info" style="flex:1;">
@@ -174,28 +144,88 @@ async function loadBookings(uid) {
         ${b.adminNotes ? `<p style="font-size:13px;color:var(--text-soft);"><strong style="color:var(--text);">Admin note:</strong> ${esc(b.adminNotes)}</p>` : ""}
       </div>
     </div>`;
-  }).join("");
 }
 
-// ── Load reports ──────────────────────────────────────────
-async function loadReports(uid) {
+function renderBookings(list) {
+  const noMatch = document.getElementById("bookings-no-match");
+  if (list.length === 0) {
+    bookingsList.innerHTML = "";
+    noMatch.style.display = "block";
+  } else {
+    noMatch.style.display = "none";
+    bookingsList.innerHTML = list.map(bookingCardHTML).join("");
+  }
+}
+
+let allBookingsData = [];
+
+function applyBookingsFilter() {
+  const q    = document.getElementById("bookings-search").value.trim().toLowerCase();
+  const sort = document.getElementById("bookings-sort").value;
+  const s    = f => (f || "").toLowerCase();
+  const ts   = b => b.createdAt?.toMillis?.() ?? 0;
+
+  let list = allBookingsData.filter(b => !q || (
+    s(b.category).includes(q)        || s(b.testDescription).includes(q) ||
+    s(b.status).includes(q)          || s(b.projectName).includes(q)     ||
+    s(b.deliveryMethod).includes(q)  ||
+    formatDate(b.createdAt).toLowerCase().includes(q)
+  ));
+
+  list = [...list].sort((a, b) => {
+    if (sort === "date-desc")     return ts(b) - ts(a);
+    if (sort === "date-asc")      return ts(a) - ts(b);
+    if (sort === "status-asc")    return s(a.status).localeCompare(s(b.status));
+    if (sort === "category-asc")  return s(a.category).localeCompare(s(b.category));
+    return 0;
+  });
+
+  renderBookings(list);
+}
+
+// ── Load bookings ─────────────────────────────────────────
+async function loadBookings(uid) {
   let snap;
   try {
-    snap = await getDocs(query(collection(db, "reports"), where("userId", "==", uid)));
+    snap = await getDocs(query(collection(db, "bookings"), where("userId", "==", uid)));
   } catch (err) {
-    reportsList.innerHTML = `<p style="color:var(--danger);padding:16px;">Could not load reports: ${err.message}</p>`;
+    bookingsList.innerHTML = `<p style="color:var(--danger);padding:16px;">Could not load bookings: ${err.message}</p>`;
     return;
   }
 
-  document.getElementById("stat-results").textContent = snap.size;
+  if (snap.empty) {
+    bookingsEmpty.style.display = "block";
+    ["stat-bookings","stat-active","stat-completed"].forEach(id => document.getElementById(id).textContent = 0);
+    return;
+  }
 
-  if (snap.empty) { reportsEmpty.style.display = "block"; return; }
+  allBookingsData = [];
+  snap.forEach(d => {
+    const data = d.data();
+    allBookingsData.push({ id: d.id, ...data, status: (data.status || "pending").trim().toLowerCase() });
+  });
+  allBookingsData.sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
 
-  const reports = [];
-  snap.forEach(d => reports.push({ id: d.id, ...d.data() }));
-  reports.sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
+  document.getElementById("stat-bookings").textContent  = allBookingsData.length;
+  document.getElementById("stat-active").textContent    =
+    allBookingsData.filter(b => ["confirmed","in-progress"].includes(b.status)).length;
+  document.getElementById("stat-completed").textContent =
+    allBookingsData.filter(b => b.status === "completed").length;
 
-  reportsList.innerHTML = reports.map(r => `
+  const bar = document.getElementById("bookings-search-bar");
+  bar.style.display = "flex";
+  document.getElementById("bookings-search").value = "";
+  document.getElementById("bookings-sort").value   = "date-desc";
+
+  renderBookings(allBookingsData);
+
+  document.getElementById("bookings-search").addEventListener("input", applyBookingsFilter);
+  document.getElementById("bookings-sort").addEventListener("change", applyBookingsFilter);
+}
+
+// ── Report card HTML ──────────────────────────────────────
+function reportCardHTML(r) {
+  return `
     <div class="result-card expandable" onclick="toggleExpand(this)">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
         <div style="flex:1;">
@@ -223,6 +253,70 @@ async function loadReports(uid) {
                onclick="event.stopPropagation()">View Report</a>`
           : ""}
       </div>
-    </div>
-  `).join("");
+    </div>`;
+}
+
+function renderReports(list) {
+  const noMatch = document.getElementById("reports-no-match");
+  if (list.length === 0) {
+    reportsList.innerHTML = "";
+    noMatch.style.display = "block";
+  } else {
+    noMatch.style.display = "none";
+    reportsList.innerHTML = list.map(reportCardHTML).join("");
+  }
+}
+
+let allReportsData = [];
+
+function applyReportsFilter() {
+  const q    = document.getElementById("reports-search").value.trim().toLowerCase();
+  const sort = document.getElementById("reports-sort").value;
+  const s    = f => (f || "").toLowerCase();
+  const ts   = r => (r.reportDate || r.createdAt)?.toMillis?.() ?? 0;
+
+  let list = allReportsData.filter(r => !q || (
+    s(r.clientName).includes(q)  || s(r.companyName).includes(q) ||
+    s(r.projectName).includes(q) || s(r.testId).includes(q)      ||
+    formatDate(r.reportDate || r.createdAt).toLowerCase().includes(q)
+  ));
+
+  list = [...list].sort((a, b) => {
+    if (sort === "date-desc")   return ts(b) - ts(a);
+    if (sort === "date-asc")    return ts(a) - ts(b);
+    if (sort === "company-asc") return s(a.companyName).localeCompare(s(b.companyName));
+    if (sort === "testid-asc")  return (parseFloat(a.testId) || 0) - (parseFloat(b.testId) || 0);
+    return 0;
+  });
+
+  renderReports(list);
+}
+
+// ── Load reports ──────────────────────────────────────────
+async function loadReports(uid) {
+  let snap;
+  try {
+    snap = await getDocs(query(collection(db, "reports"), where("userId", "==", uid)));
+  } catch (err) {
+    reportsList.innerHTML = `<p style="color:var(--danger);padding:16px;">Could not load reports: ${err.message}</p>`;
+    return;
+  }
+
+  document.getElementById("stat-results").textContent = snap.size;
+
+  if (snap.empty) { reportsEmpty.style.display = "block"; return; }
+
+  allReportsData = [];
+  snap.forEach(d => allReportsData.push({ id: d.id, ...d.data() }));
+  allReportsData.sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
+
+  const bar = document.getElementById("reports-search-bar");
+  bar.style.display = "flex";
+  document.getElementById("reports-search").value = "";
+  document.getElementById("reports-sort").value   = "date-desc";
+
+  renderReports(allReportsData);
+
+  document.getElementById("reports-search").addEventListener("input", applyReportsFilter);
+  document.getElementById("reports-sort").addEventListener("change", applyReportsFilter);
 }
