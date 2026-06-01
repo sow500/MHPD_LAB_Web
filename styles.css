@@ -1101,6 +1101,100 @@ h1 span { color: var(--hero-accent); }
   color: var(--text-soft);
 }
 
+/* ── Contact Persons ───────────────────────────────────────── */
+.contact-persons {
+  grid-column: 1 / -1;
+  margin-top: 8px;
+}
+
+.contact-persons-label {
+  font-size: 0.71rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+  margin: 0 0 12px !important;
+}
+
+.contact-persons-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.contact-person {
+  padding: 20px;
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.person-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.person-name {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.35;
+}
+
+.person-position {
+  font-size: 0.78rem;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.person-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.person-detail > span {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+}
+
+.person-detail a {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  line-height: 1.4;
+}
+
+.person-detail a:hover {
+  color: var(--accent);
+}
+
+.viber-tag {
+  font-style: normal;
+  font-size: 0.63rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  background: #7360f2;
+  color: #fff;
+  border-radius: 100px;
+  letter-spacing: 0.04em;
+}
+
 /* ── Footer ────────────────────────────────────────────────── */
 .site-footer {
   background: var(--surface-dark-strong);
@@ -1296,6 +1390,10 @@ h1 span { color: var(--hero-accent); }
     grid-template-columns: repeat(2, 1fr);
   }
 
+  .contact-persons-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .footer-inner {
     grid-template-columns: 1fr 0.9fr 0.65fr 0.9fr;
   }
@@ -1330,6 +1428,10 @@ h1 span { color: var(--hero-accent); }
   .stats-grid,
   .contact-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .contact-persons-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .album-card {
@@ -1473,6 +1575,10 @@ h1 span { color: var(--hero-accent); }
 
   .stats-grid,
   .contact-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .contact-persons-grid {
     grid-template-columns: 1fr;
   }
 
