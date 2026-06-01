@@ -1101,7 +1101,7 @@ h1 span { color: var(--hero-accent); }
   color: var(--text-soft);
 }
 
-/* ── Contact Persons ───────────────────────────────────────── */
+/* ── Contact Persons (Tabs) ────────────────────────────────── */
 .contact-persons {
   grid-column: 1 / -1;
   margin-top: 8px;
@@ -1116,41 +1116,100 @@ h1 span { color: var(--hero-accent); }
   margin: 0 0 12px !important;
 }
 
-.contact-persons-grid {
+.person-tabs {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
-}
-
-.contact-person {
-  padding: 20px;
-  background: var(--surface-soft);
+  grid-template-columns: 220px 1fr;
+  gap: 0;
   border: 1px solid var(--line);
   border-radius: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  overflow: hidden;
 }
 
-.person-info {
+.person-tab-list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding-bottom: 12px;
+  background: var(--surface-soft);
+  border-right: 1px solid var(--line);
+}
+
+.person-tab {
+  all: unset;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 16px 18px;
+  cursor: pointer;
   border-bottom: 1px solid var(--line);
+  transition: background 0.15s;
 }
 
-.person-name {
-  font-size: 0.92rem;
+.person-tab:last-child {
+  border-bottom: none;
+}
+
+.person-tab:hover {
+  background: var(--accent-soft);
+}
+
+.person-tab.active {
+  background: var(--surface);
+  border-right: 2px solid var(--accent);
+  margin-right: -1px;
+}
+
+.tab-name {
+  font-size: 0.87rem;
   font-weight: 700;
   color: var(--text);
-  line-height: 1.35;
+  line-height: 1.3;
 }
 
-.person-position {
-  font-size: 0.78rem;
+.person-tab.active .tab-name {
+  color: var(--accent);
+}
+
+.tab-role {
+  font-size: 0.74rem;
+  color: var(--text-soft);
+  line-height: 1.3;
+}
+
+.person-tab-panels {
+  background: var(--surface);
+  padding: 24px 28px;
+  position: relative;
+}
+
+.person-panel {
+  display: none;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.person-panel.active {
+  display: flex;
+}
+
+.panel-name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.3;
+}
+
+.panel-position {
+  font-size: 0.82rem;
   color: var(--accent);
   font-weight: 600;
+  margin-top: -10px;
+}
+
+.panel-details {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-top: 6px;
+  border-top: 1px solid var(--line);
 }
 
 .person-detail {
@@ -1169,7 +1228,7 @@ h1 span { color: var(--hero-accent); }
 }
 
 .person-detail a {
-  font-size: 0.88rem;
+  font-size: 0.93rem;
   font-weight: 600;
   color: var(--text);
   text-decoration: none;
@@ -1390,10 +1449,6 @@ h1 span { color: var(--hero-accent); }
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .contact-persons-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .footer-inner {
     grid-template-columns: 1fr 0.9fr 0.65fr 0.9fr;
   }
@@ -1430,8 +1485,8 @@ h1 span { color: var(--hero-accent); }
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .contact-persons-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .person-tabs {
+    grid-template-columns: 180px 1fr;
   }
 
   .album-card {
@@ -1578,8 +1633,32 @@ h1 span { color: var(--hero-accent); }
     grid-template-columns: 1fr;
   }
 
-  .contact-persons-grid {
+  .person-tabs {
     grid-template-columns: 1fr;
+  }
+
+  .person-tab-list {
+    flex-direction: row;
+    overflow-x: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .person-tab {
+    flex-shrink: 0;
+    border-bottom: none;
+    border-right: 1px solid var(--line);
+  }
+
+  .person-tab:last-child {
+    border-right: none;
+  }
+
+  .person-tab.active {
+    border-right: 1px solid var(--line);
+    border-bottom: 2px solid var(--accent);
+    margin-right: 0;
+    margin-bottom: -1px;
   }
 
   .footer-inner {

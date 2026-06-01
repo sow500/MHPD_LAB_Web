@@ -386,3 +386,20 @@ document
   .forEach((element) => {
     observer.observe(element);
   });
+
+// Person contact tabs
+document.querySelectorAll(".person-tab").forEach((tab) => {
+  tab.addEventListener("click", () => {
+    const targetId = tab.dataset.tab;
+    tab.closest(".person-tabs").querySelectorAll(".person-tab").forEach((t) => {
+      t.classList.remove("active");
+      t.setAttribute("aria-selected", "false");
+    });
+    tab.closest(".person-tabs").querySelectorAll(".person-panel").forEach((p) => {
+      p.classList.remove("active");
+    });
+    tab.classList.add("active");
+    tab.setAttribute("aria-selected", "true");
+    document.getElementById(targetId).classList.add("active");
+  });
+});
