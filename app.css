@@ -552,6 +552,27 @@ body {
   color: var(--info);
 }
 
+/* ── Expandable cards ────────────────────────────────────── */
+.expandable { cursor: pointer; user-select: none; }
+.expand-chevron { flex-shrink: 0; transition: transform 0.22s ease; color: var(--text-soft); }
+.expandable.is-open .expand-chevron { transform: rotate(180deg); }
+.card-details {
+  display: none;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+.expandable.is-open .card-details { display: block; }
+.detail-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 24px;
+  font-size: 13px;
+  color: var(--text-soft);
+  margin-bottom: 10px;
+}
+.detail-grid span strong { color: var(--text); font-weight: 600; }
+
 /* ── Status tab buttons (admin actions) ─────────────────── */
 .stab {
   padding: 4px 10px;

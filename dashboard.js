@@ -64,6 +64,16 @@ function paymentBadgeHTML(paymentStatus) {
     : `<span class="badge badge-pending">Unpaid</span>`;
 }
 
+const chevronSVG = `<svg class="expand-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none"
+  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <polyline points="6 9 12 15 18 9"/>
+</svg>`;
+
+// ── Expand / collapse ─────────────────────────────────────
+window.toggleExpand = function (el) {
+  el.classList.toggle("is-open");
+};
+
 // ── Auth guard ────────────────────────────────────────────
 onAuthStateChanged(auth, async (user) => {
   if (!user) { window.location.href = "auth.html"; return; }
@@ -90,10 +100,7 @@ onAuthStateChanged(auth, async (user) => {
     bookingsSection.style.display = "";
     reportsSection.style.display  = "";
 
-    await Promise.all([
-      loadBookings(user.uid),
-      loadReports(user.uid)
-    ]);
+    await Promise.all([loadBookings(user.uid), loadReports(user.uid)]);
   } catch (err) {
     console.error("Dashboard load error:", err);
     content.style.display = "block";
@@ -108,16 +115,13 @@ async function loadBookings(uid) {
   try {
     snap = await getDocs(query(collection(db, "bookings"), where("userId", "==", uid)));
   } catch (err) {
-    console.error("Bookings query error:", err);
     bookingsList.innerHTML = `<p style="color:var(--danger);padding:16px;">Could not load bookings: ${err.message}</p>`;
     return;
   }
 
   if (snap.empty) {
     bookingsEmpty.style.display = "block";
-    document.getElementById("stat-bookings").textContent  = 0;
-    document.getElementById("stat-active").textContent    = 0;
-    document.getElementById("stat-completed").textContent = 0;
+    ["stat-bookings","stat-active","stat-completed"].forEach(id => document.getElementById(id).textContent = 0);
     return;
   }
 
@@ -134,23 +138,43 @@ async function loadBookings(uid) {
   document.getElementById("stat-completed").textContent =
     bookings.filter(b => b.status === "completed").length;
 
-  bookingsList.innerHTML = bookings.map(b => `
-    <div class="booking-card">
-      <div class="booking-info">
-        <h4>${esc(b.category)} — ${esc(b.testDescription)}</h4>
-        <div class="booking-meta">
-          <span>Samples: ${esc(String(b.quantity || 1))}</span>
-          <span>Preferred date: ${formatDate(b.preferredDate)}</span>
-          <span>Booked: ${formatDate(b.createdAt)}</span>
+  bookingsList.innerHTML = bookings.map(b => {
+    const tests = Array.isArray(b.selectedTests) && b.selectedTests.length
+      ? b.selectedTests.join(", ")
+      : null;
+
+    return `
+    <div class="booking-card expandable" onclick="toggleExpand(this)">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+        <div class="booking-info" style="flex:1;">
+          <h4>${esc(b.category)} — ${esc(b.testDescription)}</h4>
+          <div class="booking-meta">
+            <span>Samples: ${esc(String(b.quantity || 1))}</span>
+            <span>Preferred date: ${formatDate(b.preferredDate)}</span>
+            <span>Booked: ${formatDate(b.createdAt)}</span>
+          </div>
         </div>
-        ${b.adminNotes ? `<p style="font-size:13px;color:var(--text-soft);margin-top:8px;">Note: ${esc(b.adminNotes)}</p>` : ""}
+        <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+            ${badgeHTML(b.status)}
+            ${paymentBadgeHTML(b.paymentStatus)}
+          </div>
+          ${chevronSVG}
+        </div>
       </div>
-      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
-        ${badgeHTML(b.status)}
-        ${paymentBadgeHTML(b.paymentStatus)}
+      <div class="card-details">
+        <div class="detail-grid">
+          ${b.deliveryMethod ? `<span><strong>Delivery:</strong> ${esc(b.deliveryMethod)}</span>` : ""}
+          ${b.userCompany    ? `<span><strong>Company:</strong> ${esc(b.userCompany)}</span>`    : ""}
+          ${b.projectName    ? `<span><strong>Project:</strong> ${esc(b.projectName)}</span>`    : ""}
+          ${b.quantity       ? `<span><strong>Samples:</strong> ${esc(String(b.quantity))}</span>` : ""}
+        </div>
+        ${tests ? `<p style="font-size:13px;margin-bottom:8px;"><strong>Selected Tests:</strong> ${esc(tests)}</p>` : ""}
+        ${b.notes      ? `<p style="font-size:13px;margin-bottom:6px;color:var(--text-soft);"><strong style="color:var(--text);">Notes:</strong> ${esc(b.notes)}</p>` : ""}
+        ${b.adminNotes ? `<p style="font-size:13px;color:var(--text-soft);"><strong style="color:var(--text);">Admin note:</strong> ${esc(b.adminNotes)}</p>` : ""}
       </div>
-    </div>
-  `).join("");
+    </div>`;
+  }).join("");
 }
 
 // ── Load reports ──────────────────────────────────────────
@@ -159,36 +183,46 @@ async function loadReports(uid) {
   try {
     snap = await getDocs(query(collection(db, "reports"), where("userId", "==", uid)));
   } catch (err) {
-    console.error("Reports query error:", err);
     reportsList.innerHTML = `<p style="color:var(--danger);padding:16px;">Could not load reports: ${err.message}</p>`;
     return;
   }
 
   document.getElementById("stat-results").textContent = snap.size;
 
-  if (snap.empty) {
-    reportsEmpty.style.display = "block";
-    return;
-  }
+  if (snap.empty) { reportsEmpty.style.display = "block"; return; }
 
   const reports = [];
   snap.forEach(d => reports.push({ id: d.id, ...d.data() }));
   reports.sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
 
   reportsList.innerHTML = reports.map(r => `
-    <div class="result-card">
-      <div class="result-header">
-        <h4>${esc(r.clientName || r.companyName || "Report")}</h4>
-        <span style="font-size:11px;background:var(--success-bg);color:var(--success);padding:2px 8px;border-radius:10px;font-weight:600;">Report</span>
+    <div class="result-card expandable" onclick="toggleExpand(this)">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+        <div style="flex:1;">
+          <h4>${esc(r.clientName || r.companyName || "Report")}</h4>
+          <div class="booking-meta">
+            ${r.testId ? `<span>Test ID: ${esc(r.testId)}</span>` : ""}
+            <span>Date: ${formatDate(r.reportDate || r.createdAt)}</span>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+          <span style="font-size:11px;background:var(--success-bg);color:var(--success);padding:2px 8px;border-radius:10px;font-weight:600;white-space:nowrap;">Report</span>
+          ${chevronSVG}
+        </div>
       </div>
-      <div class="booking-meta">
-        ${r.companyName ? `<span>Company: ${esc(r.companyName)}</span>` : ""}
-        ${r.projectName ? `<span>Project: ${esc(r.projectName)}</span>` : ""}
-        ${r.testId      ? `<span>Test ID: ${esc(r.testId)}</span>`      : ""}
-        <span>Date: ${formatDate(r.reportDate || r.createdAt)}</span>
+      <div class="card-details">
+        <div class="detail-grid">
+          ${r.companyName ? `<span><strong>Company:</strong> ${esc(r.companyName)}</span>` : ""}
+          ${r.projectName ? `<span><strong>Project:</strong> ${esc(r.projectName)}</span>` : ""}
+          ${r.testId      ? `<span><strong>Test ID:</strong> ${esc(r.testId)}</span>`      : ""}
+          <span><strong>Date:</strong> ${formatDate(r.reportDate || r.createdAt)}</span>
+        </div>
+        ${r.notes ? `<p style="font-size:13px;margin-bottom:12px;">${esc(r.notes)}</p>` : ""}
+        ${r.fileUrl
+          ? `<a href="${esc(r.fileUrl)}" target="_blank" class="btn btn-secondary btn-sm"
+               onclick="event.stopPropagation()">View Report</a>`
+          : ""}
       </div>
-      ${r.notes ? `<p style="margin-top:12px;font-size:14px;">${esc(r.notes)}</p>` : ""}
-      ${r.fileUrl ? `<a href="${esc(r.fileUrl)}" target="_blank" class="btn btn-secondary btn-sm" style="margin-top:12px;">View Report</a>` : ""}
     </div>
   `).join("");
 }
