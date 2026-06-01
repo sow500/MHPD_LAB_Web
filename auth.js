@@ -76,22 +76,44 @@ async function ensureUserProfile(user, extra = {}) {
 function redirectUser(status, role) {
   if (role === "admin") {
     window.location.href = "admin.html";
-  } else if (status === "approved") {
-    window.location.href = "dashboard.html";
   } else {
     window.location.href = "dashboard.html";
   }
 }
 
-// ── Already logged in? Redirect ───────────────────────────
-onAuthStateChanged(auth, async (user) => {
-  if (user) {
+// ── Single shared handler (prevents race condition) ───────
+let authHandled = false;
+async function handleUser(user) {
+  if (authHandled) return;
+  authHandled = true;
+  showAlert("Signing you in…", "success");
+  try {
+    await ensureUserProfile(user, { displayName: user.displayName });
     const snap = await getDoc(doc(db, "users", user.uid));
     if (snap.exists()) {
-      const data = snap.data();
-      redirectUser(data.status, data.role);
+      redirectUser(snap.data().status, snap.data().role);
+    } else {
+      showAlert("No account found. Please register.");
+      authHandled = false;
     }
+  } catch (err) {
+    showAlert("Sign-in error: " + (err.message || err.code));
+    authHandled = false;
   }
+}
+
+// ── Handle Google redirect result ─────────────────────────
+getRedirectResult(auth).then(async (result) => {
+  if (result && result.user) await handleUser(result.user);
+}).catch((err) => {
+  if (err.code !== "auth/cancelled-popup-request") {
+    showAlert("Google sign-in failed: " + (err.message || err.code));
+  }
+});
+
+// ── Already logged in? Redirect immediately ───────────────
+onAuthStateChanged(auth, async (user) => {
+  if (user) await handleUser(user);
 });
 
 // ── Email / password login ────────────────────────────────
