@@ -404,18 +404,20 @@ document.querySelectorAll(".person-tab").forEach((tab) => {
   });
 });
 
-// Total test count — reads the pre-computed SUMPRODUCT formula from Summary!A1
-(async function loadTestCount() {
-  const id  = '1-7XSox9nwCKdO5bWF8Xe-79zmxNpplckRPVpxcJ_cP4';
-  const q   = encodeURIComponent('select A limit 1');
-  const sh  = encodeURIComponent('Summary');
-  const url = `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:json&sheet=${sh}&tq=${q}`;
-  try {
-    const text = await (await fetch(url)).text();
-    const json = JSON.parse(text.replace(/^[^(]+\(/, '').replace(/\);\s*$/, ''));
-    const n = json?.table?.rows?.[0]?.c?.[0]?.v;
-    if (typeof n === 'number') {
-      document.getElementById('total-tests-count').textContent = n.toLocaleString() + '+';
-    }
-  } catch { /* keep the em-dash if the sheet is unreachable */ }
+// Total test count — JSONP via script tag (no CORS issues)
+window._testCountCb = function(response) {
+  const n = response?.table?.rows?.[0]?.c?.[0]?.v;
+  if (typeof n === 'number') {
+    const el = document.getElementById('total-tests-count');
+    if (el) el.textContent = Math.round(n).toLocaleString() + '+';
+  }
+};
+(function loadTestCount() {
+  const id = '1-7XSox9nwCKdO5bWF8Xe-79zmxNpplckRPVpxcJ_cP4';
+  const q  = encodeURIComponent('select A limit 1');
+  const sh = encodeURIComponent('Summary');
+  const s  = document.createElement('script');
+  s.src = `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:json;handler=_testCountCb&sheet=${sh}&tq=${q}`;
+  s.onerror = function() {};
+  document.head.appendChild(s);
 })();
