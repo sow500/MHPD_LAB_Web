@@ -512,20 +512,19 @@ resultForm.addEventListener("submit", async (e) => {
 //  REPORTS
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-async function loadReports() {
-  const snap = await getDocs(query(collection(db, "reports"), orderBy("createdAt", "desc")));
-  document.getElementById("reports-admin-loading").style.display = "none";
+let allReports = [];
 
-  if (snap.empty) {
-    document.getElementById("reports-admin-empty").style.display = "block";
+function renderReportsTable(reports) {
+  const wrap = document.getElementById("reports-admin-table-wrap");
+  const noMatch = document.getElementById("reports-no-match");
+  if (reports.length === 0) {
+    wrap.style.display = "none";
+    noMatch.style.display = "block";
     return;
   }
-
-  const reports = [];
-  snap.forEach(d => reports.push({ id: d.id, ...d.data() }));
-
-  document.getElementById("reports-admin-table-wrap").style.display = "block";
-  document.getElementById("reports-admin-table-wrap").innerHTML = `
+  noMatch.style.display = "none";
+  wrap.style.display = "block";
+  wrap.innerHTML = `
     <div class="table-wrap">
       <table class="data-table">
         <thead>
@@ -546,6 +545,39 @@ async function loadReports() {
         </tbody>
       </table>
     </div>`;
+}
+
+document.getElementById("reports-search").addEventListener("input", function () {
+  const q = this.value.trim().toLowerCase();
+  if (!q) { renderReportsTable(allReports); return; }
+  const filtered = allReports.filter(r => {
+    const date = formatDate(r.reportDate || r.createdAt).toLowerCase();
+    return (
+      (r.testId      || "").toLowerCase().includes(q) ||
+      (r.companyName || "").toLowerCase().includes(q) ||
+      (r.clientName  || r.userEmail || "").toLowerCase().includes(q) ||
+      (r.projectName || "").toLowerCase().includes(q) ||
+      date.includes(q)
+    );
+  });
+  renderReportsTable(filtered);
+});
+
+async function loadReports() {
+  const snap = await getDocs(query(collection(db, "reports"), orderBy("createdAt", "desc")));
+  document.getElementById("reports-admin-loading").style.display = "none";
+
+  if (snap.empty) {
+    document.getElementById("reports-admin-empty").style.display = "block";
+    return;
+  }
+
+  allReports = [];
+  snap.forEach(d => allReports.push({ id: d.id, ...d.data() }));
+
+  document.getElementById("reports-search-bar").style.display = "block";
+  document.getElementById("reports-search").value = "";
+  renderReportsTable(allReports);
 }
 
 const reportForm = document.getElementById("report-form");

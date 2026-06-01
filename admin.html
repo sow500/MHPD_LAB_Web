@@ -244,10 +244,16 @@
           </form>
         </div>
         <h3 style="margin-bottom:16px;">Uploaded Reports</h3>
+        <div id="reports-search-bar" style="display:none;margin-bottom:16px;">
+          <input class="form-input" id="reports-search" type="text" placeholder="Search by Test ID, Company, Client, Project, or Date…" autocomplete="off">
+        </div>
         <div id="reports-admin-loading" class="loading-spinner"><div class="spinner"></div></div>
         <div id="reports-admin-table-wrap" style="display:none;"></div>
         <div id="reports-admin-empty" class="empty-state" style="display:none;">
           <p>No reports uploaded yet.</p>
+        </div>
+        <div id="reports-no-match" class="empty-state" style="display:none;">
+          <p>No reports match your search.</p>
         </div>
       </div>
 
