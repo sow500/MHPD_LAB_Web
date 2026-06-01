@@ -2,8 +2,7 @@ import { auth, db, googleProvider } from "./firebase-config.js";
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
-  signInWithRedirect,
-  getRedirectResult,
+  signInWithPopup,
   updateProfile,
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
@@ -81,39 +80,16 @@ function redirectUser(status, role) {
   }
 }
 
-// ── Single shared handler (prevents race condition) ───────
-let authHandled = false;
-async function handleUser(user) {
-  if (authHandled) return;
-  authHandled = true;
-  showAlert("Signing you in…", "success");
-  try {
-    await ensureUserProfile(user, { displayName: user.displayName });
-    const snap = await getDoc(doc(db, "users", user.uid));
-    if (snap.exists()) {
-      redirectUser(snap.data().status, snap.data().role);
-    } else {
-      showAlert("No account found. Please register.");
-      authHandled = false;
-    }
-  } catch (err) {
-    showAlert("Sign-in error: " + (err.message || err.code));
-    authHandled = false;
-  }
-}
-
-// ── Handle Google redirect result ─────────────────────────
-getRedirectResult(auth).then(async (result) => {
-  if (result && result.user) await handleUser(result.user);
-}).catch((err) => {
-  if (err.code !== "auth/cancelled-popup-request") {
-    showAlert("Google sign-in failed: " + (err.message || err.code));
-  }
-});
-
 // ── Already logged in? Redirect immediately ───────────────
 onAuthStateChanged(auth, async (user) => {
-  if (user) await handleUser(user);
+  if (user) {
+    try {
+      const snap = await getDoc(doc(db, "users", user.uid));
+      if (snap.exists()) redirectUser(snap.data().status, snap.data().role);
+    } catch (err) {
+      showAlert("Error loading account: " + (err.message || err.code));
+    }
+  }
 });
 
 // ── Email / password login ────────────────────────────────
@@ -199,12 +175,24 @@ getRedirectResult(auth).then(async (result) => {
   }
 });
 
-// ── Google sign-in — redirect (avoids popup/cookie issues) ─
-function handleGoogle() {
+// ── Google sign-in ────────────────────────────────────────
+async function handleGoogle() {
   hideAlert();
-  signInWithRedirect(auth, googleProvider).catch((err) => {
-    showAlert(`Google sign-in failed (${err.code || "unknown"}). Please try again.`);
-  });
+  try {
+    const result = await signInWithPopup(auth, googleProvider);
+    const user = result.user;
+    showAlert("Signing you in…", "success");
+    await ensureUserProfile(user, { displayName: user.displayName });
+    const snap = await getDoc(doc(db, "users", user.uid));
+    if (snap.exists()) {
+      redirectUser(snap.data().status, snap.data().role);
+    } else {
+      showAlert("No account record found. Please contact the lab.");
+    }
+  } catch (err) {
+    if (err.code === "auth/popup-closed-by-user" || err.code === "auth/cancelled-popup-request") return;
+    showAlert("Google sign-in failed: " + (err.message || err.code));
+  }
 }
 
 document.getElementById("google-login-btn").addEventListener("click", handleGoogle);
