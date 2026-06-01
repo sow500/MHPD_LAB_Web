@@ -357,7 +357,17 @@ function bookingRowHTML(b, showStatus, panelKey = "") {
           </div>
           ${tests      ? `<p style="font-size:13px;margin-bottom:6px;"><strong>Selected Tests:</strong> ${esc(tests)}</p>`           : ""}
           ${b.notes    ? `<p style="font-size:13px;margin-bottom:6px;color:var(--text-soft);"><strong style="color:var(--text);">Client Notes:</strong> ${esc(b.notes)}</p>` : ""}
-          ${b.adminNotes ? `<p style="font-size:13px;color:var(--text-soft);"><strong style="color:var(--text);">Admin Notes:</strong> ${esc(b.adminNotes)}</p>` : ""}
+          ${b.adminNotes ? `<p style="font-size:13px;margin-bottom:10px;color:var(--text-soft);"><strong style="color:var(--text);">Admin Notes:</strong> ${esc(b.adminNotes)}</p>` : ""}
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;" onclick="event.stopPropagation()">
+            <label style="font-size:13px;font-weight:600;white-space:nowrap;">Test ID:</label>
+            <input type="text" class="form-input" id="tid-${uid}"
+              style="max-width:160px;font-size:13px;padding:6px 10px;"
+              value="${esc(b.testId || "")}"
+              placeholder="e.g., 31783">
+            <button class="btn btn-secondary btn-sm"
+              onclick="window._saveTestId('${b.id}','${uid}')">Save</button>
+            <span id="tid-msg-${uid}" style="font-size:12px;color:var(--success);display:none;">Saved ✓</span>
+          </div>
         </div>
       </td>
     </tr>`;
@@ -505,6 +515,18 @@ window._updateBooking = async function (bookingId, newStatus) {
   } catch (err) {
     alert("Failed to update booking: " + err.message);
     await loadBookings();
+  }
+};
+
+window._saveTestId = async function (bookingId, uid) {
+  const input = document.getElementById(`tid-${uid}`);
+  const msg   = document.getElementById(`tid-msg-${uid}`);
+  if (!input) return;
+  try {
+    await updateDoc(doc(db, "bookings", bookingId), { testId: input.value.trim() });
+    if (msg) { msg.style.display = "inline"; setTimeout(() => msg.style.display = "none", 2000); }
+  } catch (err) {
+    alert("Failed to save Test ID: " + err.message);
   }
 };
 

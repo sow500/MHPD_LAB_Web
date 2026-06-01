@@ -141,7 +141,8 @@ function bookingCardHTML(b) {
         </div>
         ${tests ? `<p style="font-size:13px;margin-bottom:8px;"><strong>Selected Tests:</strong> ${esc(tests)}</p>` : ""}
         ${b.notes      ? `<p style="font-size:13px;margin-bottom:6px;color:var(--text-soft);"><strong style="color:var(--text);">Notes:</strong> ${esc(b.notes)}</p>` : ""}
-        ${b.adminNotes ? `<p style="font-size:13px;color:var(--text-soft);"><strong style="color:var(--text);">Admin note:</strong> ${esc(b.adminNotes)}</p>` : ""}
+        ${b.adminNotes ? `<p style="font-size:13px;margin-bottom:6px;color:var(--text-soft);"><strong style="color:var(--text);">Admin note:</strong> ${esc(b.adminNotes)}</p>` : ""}
+        ${b.testId ? `<p style="font-size:13px;margin-top:4px;padding:8px 12px;background:var(--info-bg);border-radius:8px;color:var(--info);"><strong>Test ID: ${esc(b.testId)}</strong> — use this to search for your report in <em>My Reports</em></p>` : ""}
       </div>
     </div>`;
 }
@@ -168,7 +169,7 @@ function applyBookingsFilter() {
   let list = allBookingsData.filter(b => !q || (
     s(b.category).includes(q)        || s(b.testDescription).includes(q) ||
     s(b.status).includes(q)          || s(b.projectName).includes(q)     ||
-    s(b.deliveryMethod).includes(q)  ||
+    s(b.deliveryMethod).includes(q)  || s(b.testId).includes(q)          ||
     formatDate(b.createdAt).toLowerCase().includes(q)
   ));
 
