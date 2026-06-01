@@ -313,12 +313,17 @@ function bookingRowHTML(b, showStatus, panelKey = "") {
   const numCols = showStatus ? 9 : 8;
   const tests = Array.isArray(b.selectedTests) && b.selectedTests.length
     ? b.selectedTests.join(", ") : null;
+  const noIdBadge = !b.testId
+    ? `<span title="Test ID not assigned yet" style="font-size:10px;background:var(--warning-bg);color:var(--warning);padding:2px 7px;border-radius:6px;font-weight:700;white-space:nowrap;cursor:help;">⚠ No Test ID</span>`
+    : "";
+
   return `
     <tr onclick="window.toggleAdminRow('${uid}')" style="cursor:pointer;">
       <td>
-        <div style="display:flex;align-items:center;gap:6px;">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
           ${rowChevron(uid)}
           ${formatDate(b.createdAt)}
+          ${noIdBadge}
         </div>
       </td>
       <td>
