@@ -294,10 +294,32 @@ function paymentBadge(status) {
     : `<span class="badge badge-pending">Unpaid</span>`;
 }
 
+const rowChevron = (id) =>
+  `<svg id="chev-${id}" style="flex-shrink:0;transition:transform 0.2s;color:#8a9bb0;" width="14" height="14"
+    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+    stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>`;
+
+window.toggleAdminRow = function (id) {
+  const detail = document.getElementById(`adr-${id}`);
+  const chev   = document.getElementById(`chev-${id}`);
+  if (!detail) return;
+  const open = detail.style.display !== "none";
+  detail.style.display = open ? "none" : "table-row";
+  if (chev) chev.style.transform = open ? "" : "rotate(180deg)";
+};
+
 function bookingRowHTML(b, showStatus) {
+  const numCols = showStatus ? 9 : 8;
+  const tests = Array.isArray(b.selectedTests) && b.selectedTests.length
+    ? b.selectedTests.join(", ") : null;
   return `
-    <tr>
-      <td>${formatDate(b.createdAt)}</td>
+    <tr onclick="window.toggleAdminRow('${b.id}')" style="cursor:pointer;">
+      <td>
+        <div style="display:flex;align-items:center;gap:6px;">
+          ${rowChevron(b.id)}
+          ${formatDate(b.createdAt)}
+        </div>
+      </td>
       <td>
         <strong>${esc(b.userName)}</strong><br>
         <small style="color:var(--text-soft)">${esc(b.userCompany || b.userEmail)}</small>
@@ -307,20 +329,35 @@ function bookingRowHTML(b, showStatus) {
       <td>${esc(String(b.quantity || 1))}</td>
       <td style="font-size:13px;">${esc(b.deliveryMethod || "—")}</td>
       ${showStatus ? `<td>${badgeHTML(b.status)}</td>` : ""}
-      <td>
+      <td onclick="event.stopPropagation()">
         <select class="form-select" style="font-size:13px;padding:6px 10px;min-width:100px;"
           onchange="window._updatePayment('${b.id}', this.value)">
           <option value="unpaid" ${(b.paymentStatus || "unpaid") === "unpaid" ? "selected" : ""}>Unpaid</option>
           <option value="paid"   ${b.paymentStatus === "paid" ? "selected" : ""}>Paid</option>
         </select>
       </td>
-      <td>
+      <td onclick="event.stopPropagation()">
         <select class="form-select" style="font-size:13px;padding:6px 10px;min-width:130px;"
           onchange="window._updateBooking('${b.id}', this.value)">
           ${["pending","confirmed","in-progress","completed","cancelled"].map(s =>
             `<option value="${s}" ${b.status === s ? "selected" : ""}>${s}</option>`
           ).join("")}
         </select>
+      </td>
+    </tr>
+    <tr id="adr-${b.id}" style="display:none;">
+      <td colspan="${numCols}" style="padding:0;">
+        <div style="padding:12px 20px 14px;background:var(--surface-soft);border-top:1px solid var(--line);">
+          <div style="display:flex;flex-wrap:wrap;gap:6px 28px;font-size:13px;color:var(--text-soft);margin-bottom:8px;">
+            ${b.projectName    ? `<span><strong style="color:var(--text);">Project:</strong> ${esc(b.projectName)}</span>`    : ""}
+            ${b.userEmail      ? `<span><strong style="color:var(--text);">Email:</strong> ${esc(b.userEmail)}</span>`         : ""}
+            ${b.userCompany    ? `<span><strong style="color:var(--text);">Company:</strong> ${esc(b.userCompany)}</span>`     : ""}
+            ${b.deliveryMethod ? `<span><strong style="color:var(--text);">Delivery:</strong> ${esc(b.deliveryMethod)}</span>` : ""}
+          </div>
+          ${tests      ? `<p style="font-size:13px;margin-bottom:6px;"><strong>Selected Tests:</strong> ${esc(tests)}</p>`           : ""}
+          ${b.notes    ? `<p style="font-size:13px;margin-bottom:6px;color:var(--text-soft);"><strong style="color:var(--text);">Client Notes:</strong> ${esc(b.notes)}</p>` : ""}
+          ${b.adminNotes ? `<p style="font-size:13px;color:var(--text-soft);"><strong style="color:var(--text);">Admin Notes:</strong> ${esc(b.adminNotes)}</p>` : ""}
+        </div>
       </td>
     </tr>`;
 }
@@ -503,14 +540,34 @@ function renderReportsTable(reports) {
         </thead>
         <tbody>
           ${reports.map(r => `
-            <tr>
-              <td>${formatDate(r.reportDate || r.createdAt)}</td>
+            <tr onclick="window.toggleAdminRow('rpt-${r.id}')" style="cursor:pointer;">
+              <td>
+                <div style="display:flex;align-items:center;gap:6px;">
+                  ${rowChevron(`rpt-${r.id}`)}
+                  ${formatDate(r.reportDate || r.createdAt)}
+                </div>
+              </td>
               <td>${esc(r.clientName || r.userEmail || "—")}</td>
               <td style="font-size:13px;">${esc(r.companyName || "—")}</td>
               <td style="font-size:13px;">${esc(r.projectName || "—")}</td>
               <td style="font-size:13px;">${esc(r.testId || "—")}</td>
               <td style="font-size:13px;max-width:180px;">${esc(r.notes || "—")}</td>
-              <td>${r.fileUrl ? `<a href="${esc(r.fileUrl)}" target="_blank" class="btn btn-secondary btn-sm">View</a>` : "—"}</td>
+              <td onclick="event.stopPropagation()">${r.fileUrl ? `<a href="${esc(r.fileUrl)}" target="_blank" class="btn btn-secondary btn-sm">View</a>` : "—"}</td>
+            </tr>
+            <tr id="adr-rpt-${r.id}" style="display:none;">
+              <td colspan="7" style="padding:0;">
+                <div style="padding:12px 20px 14px;background:var(--surface-soft);border-top:1px solid var(--line);">
+                  <div style="display:flex;flex-wrap:wrap;gap:6px 28px;font-size:13px;color:var(--text-soft);margin-bottom:8px;">
+                    ${r.companyName ? `<span><strong style="color:var(--text);">Company:</strong> ${esc(r.companyName)}</span>` : ""}
+                    ${r.projectName ? `<span><strong style="color:var(--text);">Project:</strong> ${esc(r.projectName)}</span>` : ""}
+                    ${r.testId      ? `<span><strong style="color:var(--text);">Test ID:</strong> ${esc(r.testId)}</span>`      : ""}
+                    <span><strong style="color:var(--text);">Date:</strong> ${formatDate(r.reportDate || r.createdAt)}</span>
+                    ${r.userEmail   ? `<span><strong style="color:var(--text);">User:</strong> ${esc(r.userEmail)}</span>`      : ""}
+                  </div>
+                  ${r.notes ? `<p style="font-size:13px;margin-bottom:12px;">${esc(r.notes)}</p>` : ""}
+                  ${r.fileUrl ? `<a href="${esc(r.fileUrl)}" target="_blank" class="btn btn-secondary btn-sm">View Report</a>` : ""}
+                </div>
+              </td>
             </tr>
           `).join("")}
         </tbody>
