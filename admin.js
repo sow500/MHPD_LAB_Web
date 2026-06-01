@@ -395,17 +395,81 @@ function renderBookingTable(bookings, wrapId, noMatchId, showStatus) {
     </div>`;
 }
 
-function filterSortBookings(source, searchId, sortId) {
-  const q   = document.getElementById(searchId).value.trim().toLowerCase();
-  const sort = document.getElementById(sortId).value;
-  const s   = f => (f || "").toLowerCase();
-  const ts  = b => b.createdAt?.toMillis?.() ?? 0;
+function uniqueSorted(arr, key) {
+  return [...new Set(arr.map(i => i[key]).filter(Boolean))].sort();
+}
 
-  let list = source.filter(b => !q || (
-    s(b.userName).includes(q)        || s(b.userCompany).includes(q) ||
-    s(b.category).includes(q)        || s(b.status).includes(q)      ||
-    s(b.testDescription).includes(q) || formatDate(b.createdAt).toLowerCase().includes(q)
-  ));
+function injectBookingFilters(prefix) {
+  const bar = document.getElementById(`${prefix}-search-bar`);
+  if (!bar || document.getElementById(`${prefix}-filter-cat`)) return;
+
+  const cats  = uniqueSorted(allBookings, "category");
+  const dels  = uniqueSorted(allBookings, "deliveryMethod");
+
+  const row = document.createElement("div");
+  row.style.cssText = "display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;align-items:center;";
+  row.innerHTML = `
+    <span style="font-size:12px;font-weight:600;color:var(--text-soft);white-space:nowrap;">Filter:</span>
+    <select class="form-select" id="${prefix}-filter-cat" style="width:150px;font-size:13px;">
+      <option value="">All Categories</option>
+      ${cats.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join("")}
+    </select>
+    <select class="form-select" id="${prefix}-filter-pay" style="width:130px;font-size:13px;">
+      <option value="">All Payments</option>
+      <option value="unpaid">Unpaid</option>
+      <option value="paid">Paid</option>
+    </select>
+    <select class="form-select" id="${prefix}-filter-del" style="width:170px;font-size:13px;">
+      <option value="">All Delivery</option>
+      ${dels.map(d => `<option value="${esc(d)}">${esc(d)}</option>`).join("")}
+    </select>
+    <button class="btn btn-secondary btn-sm" onclick="window._clearBookingFilters('${prefix}')">Clear</button>`;
+  bar.appendChild(row);
+
+  ["filter-cat","filter-pay","filter-del"].forEach(f => {
+    document.getElementById(`${prefix}-${f}`)
+      ?.addEventListener("change", () => window._applyBookingPanel(prefix));
+  });
+}
+
+const _bookingApplyMap = {
+  "bookings":         () => applyBookingsView(),
+  "pending-bookings": () => applyPendingBookingsView(),
+  "confirmed":        () => applyConfirmedView(),
+  "inprogress":       () => applyInProgressView(),
+  "completed":        () => applyCompletedView(),
+  "cancelled":        () => applyCancelledView(),
+};
+window._applyBookingPanel  = prefix => _bookingApplyMap[prefix]?.();
+window._clearBookingFilters = prefix => {
+  ["filter-cat","filter-pay","filter-del"].forEach(f => {
+    const el = document.getElementById(`${prefix}-${f}`);
+    if (el) el.value = "";
+  });
+  window._applyBookingPanel(prefix);
+};
+
+function filterSortBookings(source, searchId, sortId) {
+  const prefix = searchId.replace(/-search$/, "");
+  const q      = document.getElementById(searchId)?.value.trim().toLowerCase() || "";
+  const sort   = document.getElementById(sortId)?.value || "date-desc";
+  const catF   = document.getElementById(`${prefix}-filter-cat`)?.value || "";
+  const payF   = document.getElementById(`${prefix}-filter-pay`)?.value || "";
+  const delF   = document.getElementById(`${prefix}-filter-del`)?.value || "";
+  const s      = f => (f || "").toLowerCase();
+  const ts     = b => b.createdAt?.toMillis?.() ?? 0;
+
+  let list = source.filter(b => {
+    if (catF && b.category !== catF) return false;
+    if (payF && (b.paymentStatus || "unpaid") !== payF) return false;
+    if (delF && b.deliveryMethod !== delF) return false;
+    if (!q) return true;
+    return (
+      s(b.userName).includes(q)        || s(b.userCompany).includes(q) ||
+      s(b.category).includes(q)        || s(b.status).includes(q)      ||
+      s(b.testDescription).includes(q) || formatDate(b.createdAt).toLowerCase().includes(q)
+    );
+  });
 
   return [...list].sort((a, b) => {
     if (sort === "date-desc")    return ts(b) - ts(a);
@@ -506,6 +570,8 @@ async function loadBookings() {
   populatePanel(inProgress,  "inprogress-empty",       "inprogress-search-bar",       "inprogress-search",       "inprogress-sort",       "inprogress-table-wrap",       "inprogress-no-match",       false);
   populatePanel(completed,   "completed-empty",        "completed-search-bar",        "completed-search",        "completed-sort",        "completed-table-wrap",        "completed-no-match",        false);
   populatePanel(cancelled,   "cancelled-empty",        "cancelled-search-bar",        "cancelled-search",        "cancelled-sort",        "cancelled-table-wrap",        "cancelled-no-match",        false);
+
+  ["bookings","pending-bookings","confirmed","inprogress","completed","cancelled"].forEach(injectBookingFilters);
 }
 
 window._updateBooking = async function (bookingId, newStatus) {
@@ -598,19 +664,60 @@ function renderReportsTable(reports) {
     </div>`;
 }
 
-function applyReportsView() {
-  const q    = document.getElementById("reports-search").value.trim().toLowerCase();
-  const sort = document.getElementById("reports-sort").value;
-  const s    = f => (f || "").toLowerCase();
-  const ts   = r => (r.reportDate || r.createdAt)?.toMillis?.() ?? 0;
+function injectReportFilters() {
+  const bar = document.getElementById("reports-search-bar");
+  if (!bar || document.getElementById("reports-filter-company")) return;
 
-  let list = allReports.filter(r => !q || (
-    s(r.testId).includes(q)                          ||
-    s(r.companyName).includes(q)                     ||
-    s(r.clientName || r.userEmail).includes(q)       ||
-    s(r.projectName).includes(q)                     ||
-    formatDate(r.reportDate || r.createdAt).toLowerCase().includes(q)
-  ));
+  const companies = uniqueSorted(allReports, "companyName");
+  const clients   = uniqueSorted(allReports, "clientName");
+
+  const row = document.createElement("div");
+  row.style.cssText = "display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;align-items:center;";
+  row.innerHTML = `
+    <span style="font-size:12px;font-weight:600;color:var(--text-soft);white-space:nowrap;">Filter:</span>
+    <select class="form-select" id="reports-filter-company" style="width:160px;font-size:13px;">
+      <option value="">All Companies</option>
+      ${companies.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join("")}
+    </select>
+    <select class="form-select" id="reports-filter-client" style="width:150px;font-size:13px;">
+      <option value="">All Clients</option>
+      ${clients.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join("")}
+    </select>
+    <button class="btn btn-secondary btn-sm" onclick="window._clearReportFilters()">Clear</button>`;
+  bar.appendChild(row);
+
+  ["reports-filter-company","reports-filter-client"]
+    .forEach(id => document.getElementById(id)?.addEventListener("change", applyReportsView));
+}
+
+window._clearReportFilters = () => {
+  ["reports-filter-company","reports-filter-client"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = "";
+  });
+  applyReportsView();
+};
+
+function applyReportsView() {
+  const q       = document.getElementById("reports-search").value.trim().toLowerCase();
+  const sort    = document.getElementById("reports-sort").value;
+  const compF   = document.getElementById("reports-filter-company")?.value || "";
+  const clientF = document.getElementById("reports-filter-client")?.value  || "";
+  const s       = f => (f || "").toLowerCase();
+  const ts      = r => (r.reportDate || r.createdAt)?.toMillis?.() ?? 0;
+
+  let list = allReports.filter(r => {
+    if (compF   && r.companyName !== compF) return false;
+    if (clientF && r.clientName  !== clientF) return false;
+    if (!q) return true;
+    return (
+      s(r.testId).includes(q)                          ||
+      s(r.companyName).includes(q)                     ||
+      s(r.clientName || r.userEmail).includes(q)       ||
+      s(r.projectName).includes(q)                     ||
+      formatDate(r.reportDate || r.createdAt).toLowerCase().includes(q)
+    );
+  });
 
   list = [...list].sort((a, b) => {
     if (sort === "date-desc")   return ts(b) - ts(a);
@@ -643,6 +750,7 @@ async function loadReports() {
 
   showBar("reports-search-bar");
   resetBar("reports-search", "reports-sort", "date-desc");
+  injectReportFilters();
   renderReportsTable(allReports);
 }
 
