@@ -70,7 +70,6 @@ function resetBar(searchId, sortId, sortDefault) {
 let allUsers     = [];
 let pendingUsers = [];
 let allBookings  = [];
-let allResults   = [];
 let allReports   = [];
 
 // ── Auth guard ────────────────────────────────────────────
@@ -90,7 +89,7 @@ onAuthStateChanged(auth, async (user) => {
   loadingEl.style.display  = "none";
   contentEl.style.display  = "block";
 
-  await Promise.all([loadUsers(), loadBookings(), loadResults(), loadReports()]);
+  await Promise.all([loadUsers(), loadBookings(), loadReports()]);
 });
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -247,13 +246,7 @@ async function loadUsers() {
   resetBar("all-users-search", "all-users-sort", "date-desc");
   renderAllUsersTable(allUsers);
 
-  // Populate dropdowns
-  const userSelect = document.getElementById("res-user");
-  userSelect.innerHTML = '<option value="">Select user…</option>';
-  approved.forEach(u => {
-    userSelect.innerHTML += `<option value="${esc(u.id)}" data-email="${esc(u.email)}">${esc(u.displayName || u.email)} (${esc(u.company || "—")})</option>`;
-  });
-
+  // Populate report user datalist
   const rptDatalist = document.getElementById("rpt-user-list");
   rptDatalist.innerHTML = "";
   approved.forEach(u => {
@@ -295,6 +288,12 @@ window._reject = async function (userId) {
 //  BOOKINGS
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+function paymentBadge(status) {
+  return status === "paid"
+    ? `<span class="badge badge-completed">Paid</span>`
+    : `<span class="badge badge-pending">Unpaid</span>`;
+}
+
 function bookingRowHTML(b, showStatus) {
   return `
     <tr>
@@ -308,6 +307,13 @@ function bookingRowHTML(b, showStatus) {
       <td>${esc(String(b.quantity || 1))}</td>
       <td style="font-size:13px;">${esc(b.deliveryMethod || "—")}</td>
       ${showStatus ? `<td>${badgeHTML(b.status)}</td>` : ""}
+      <td>
+        <select class="form-select" style="font-size:13px;padding:6px 10px;min-width:100px;"
+          onchange="window._updatePayment('${b.id}', this.value)">
+          <option value="unpaid" ${(b.paymentStatus || "unpaid") === "unpaid" ? "selected" : ""}>Unpaid</option>
+          <option value="paid"   ${b.paymentStatus === "paid" ? "selected" : ""}>Paid</option>
+        </select>
+      </td>
       <td>
         <select class="form-select" style="font-size:13px;padding:6px 10px;min-width:130px;"
           onchange="window._updateBooking('${b.id}', this.value)">
@@ -334,7 +340,7 @@ function renderBookingTable(bookings, wrapId, noMatchId, showStatus) {
     <div class="table-wrap">
       <table class="data-table">
         <thead>
-          <tr><th>Date</th><th>Client</th><th>Category</th><th>Tests</th><th>Samples</th><th>Delivery</th>${statusTh}<th>Actions</th></tr>
+          <tr><th>Date</th><th>Client</th><th>Category</th><th>Tests</th><th>Samples</th><th>Delivery</th>${statusTh}<th>Payment</th><th>Actions</th></tr>
         </thead>
         <tbody>${bookings.map(b => bookingRowHTML(b, showStatus)).join("")}</tbody>
       </table>
@@ -397,7 +403,9 @@ async function loadBookings() {
   const inProgress = allBookings.filter(b => (b.status || "").trim().toLowerCase() === "in-progress");
   const completed  = allBookings.filter(b => (b.status || "").trim().toLowerCase() === "completed");
 
+  const paid = allBookings.filter(b => b.paymentStatus === "paid");
   document.getElementById("a-stat-bookings").textContent     = active.length;
+  document.getElementById("a-stat-results").textContent      = paid.length;
   document.getElementById("tab-count-bookings").textContent  = allBookings.length;
   document.getElementById("tab-count-inprogress").textContent = inProgress.length;
   document.getElementById("tab-count-completed").textContent  = completed.length;
@@ -430,11 +438,6 @@ async function loadBookings() {
     renderBookingTable(completed, "completed-table-wrap", "completed-no-match", false);
   }
 
-  const bookingSel = document.getElementById("res-booking");
-  bookingSel.innerHTML = '<option value="">Select booking…</option>';
-  allBookings.filter(b => b.status !== "cancelled").forEach(b => {
-    bookingSel.innerHTML += `<option value="${b.id}">${esc(b.userName)} — ${esc(b.category)} (${formatDate(b.createdAt)})</option>`;
-  });
 }
 
 window._updateBooking = async function (bookingId, newStatus) {
@@ -447,138 +450,16 @@ window._updateBooking = async function (bookingId, newStatus) {
   }
 };
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//  RESULTS
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-function renderResultsTable(results) {
-  const wrap    = document.getElementById("results-table-wrap");
-  const noMatch = document.getElementById("results-no-match");
-  if (results.length === 0) {
-    wrap.style.display    = "none";
-    noMatch.style.display = "block";
-    return;
-  }
-  noMatch.style.display = "none";
-  wrap.style.display    = "block";
-  wrap.innerHTML = `
-    <div class="table-wrap">
-      <table class="data-table">
-        <thead>
-          <tr><th>Date</th><th>User</th><th>Booking</th><th>Status</th><th>Notes</th></tr>
-        </thead>
-        <tbody>
-          ${results.map(r => `
-            <tr>
-              <td>${formatDate(r.updatedDate || r.createdAt)}</td>
-              <td>${esc(r.userEmail)}</td>
-              <td style="font-size:13px;">${esc(r.bookingCategory || r.bookingId || "—")}</td>
-              <td>${badgeHTML(r.status || "—")}</td>
-              <td style="font-size:13px;max-width:220px;">${esc(r.notes || "—")}</td>
-            </tr>
-          `).join("")}
-        </tbody>
-      </table>
-    </div>`;
-}
-
-function applyResultsView() {
-  const q    = document.getElementById("results-search").value.trim().toLowerCase();
-  const sort = document.getElementById("results-sort").value;
-  const s    = f => (f || "").toLowerCase();
-  const ts   = r => (r.updatedDate || r.createdAt)?.toMillis?.() ?? 0;
-
-  let list = allResults.filter(r => !q || (
-    s(r.userEmail).includes(q)        || s(r.bookingCategory).includes(q) ||
-    s(r.status).includes(q)           || s(r.notes).includes(q)           ||
-    formatDate(r.updatedDate || r.createdAt).toLowerCase().includes(q)
-  ));
-
-  list = [...list].sort((a, b) => {
-    if (sort === "date-desc")   return ts(b) - ts(a);
-    if (sort === "date-asc")    return ts(a) - ts(b);
-    if (sort === "user-asc")    return s(a.userEmail).localeCompare(s(b.userEmail));
-    if (sort === "status-asc")  return s(a.status).localeCompare(s(b.status));
-    return 0;
-  });
-
-  renderResultsTable(list);
-}
-
-document.getElementById("results-search").addEventListener("input", applyResultsView);
-document.getElementById("results-sort").addEventListener("change", applyResultsView);
-
-async function loadResults() {
-  const snap = await getDocs(query(collection(db, "results"), orderBy("createdAt", "desc")));
-  document.getElementById("a-stat-results").textContent    = snap.size;
-  document.getElementById("results-loading").style.display = "none";
-
-  if (snap.empty) {
-    document.getElementById("results-empty").style.display = "block";
-    return;
-  }
-
-  allResults = [];
-  snap.forEach(d => allResults.push({ id: d.id, ...d.data() }));
-
-  showBar("results-search-bar");
-  resetBar("results-search", "results-sort", "date-desc");
-  renderResultsTable(allResults);
-}
-
-// ── Submit booking status ─────────────────────────────────
-const resultForm  = document.getElementById("result-form");
-const resultAlert = document.getElementById("result-alert");
-
-resultForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  resultAlert.className = "alert";
-
-  const userSelect      = document.getElementById("res-user");
-  const userId          = userSelect.value;
-  const userEmail       = userSelect.selectedOptions[0]?.dataset?.email || "";
-  const bookingId       = document.getElementById("res-booking").value;
-  const status          = document.getElementById("res-status").value;
-  const notes           = document.getElementById("res-notes").value.trim();
-  const dateVal         = document.getElementById("res-date").value;
-
-  if (!userId || !bookingId || !status) {
-    resultAlert.textContent = "Please fill in all required fields.";
-    resultAlert.className   = "alert alert-danger show";
-    return;
-  }
-
-  const booking         = allBookings.find(b => b.id === bookingId);
-  const bookingCategory = booking?.category || "";
-
-  const submitBtn = document.getElementById("result-submit-btn");
-  submitBtn.disabled    = true;
-  submitBtn.textContent = "Saving…";
-
+window._updatePayment = async function (bookingId, paymentStatus) {
   try {
-    await addDoc(collection(db, "results"), {
-      userId, userEmail, bookingId,
-      bookingCategory, status, notes,
-      updatedDate: dateVal ? Timestamp.fromDate(new Date(dateVal)) : null,
-      createdAt: serverTimestamp()
-    });
-
-    await updateDoc(doc(db, "bookings", bookingId), { status });
-
-    resultAlert.textContent = "Booking status saved!";
-    resultAlert.className   = "alert alert-success show";
-    resultForm.reset();
-    await loadResults();
+    await updateDoc(doc(db, "bookings", bookingId), { paymentStatus });
     await loadBookings();
   } catch (err) {
-    console.error("Status save error:", err);
-    resultAlert.textContent = "Failed to save status: " + err.message;
-    resultAlert.className   = "alert alert-danger show";
+    alert("Failed to update payment status: " + err.message);
+    await loadBookings();
   }
+};
 
-  submitBtn.disabled    = false;
-  submitBtn.textContent = "Save Status";
-});
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //  REPORTS

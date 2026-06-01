@@ -69,7 +69,7 @@
         </div>
         <div class="stat-card">
           <div class="stat-value" id="a-stat-results">0</div>
-          <div class="stat-label">Results Published</div>
+          <div class="stat-label">Paid Bookings</div>
         </div>
       </div>
 
@@ -87,7 +87,6 @@
         <button class="admin-tab" data-panel="completed">
           Completed<span class="tab-count" id="tab-count-completed">0</span>
         </button>
-        <button class="admin-tab" data-panel="results">Booking Status</button>
         <button class="admin-tab" data-panel="reports">Reports</button>
         <button class="admin-tab" data-panel="all-users">All Users</button>
       </div>
@@ -176,69 +175,6 @@
         </div>
         <div id="completed-no-match" class="empty-state" style="display:none;">
           <p>No completed bookings match your search.</p>
-        </div>
-      </div>
-
-      <!-- PANEL: Results -->
-      <div class="admin-panel" id="panel-results">
-        <div class="card" style="margin-bottom:24px;">
-          <h3 class="card-title" style="margin-bottom:16px;">Update Booking Status</h3>
-          <form id="result-form">
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label" for="res-user">User Email *</label>
-                <select class="form-select" id="res-user" required>
-                  <option value="">Select user…</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="res-booking">Booking *</label>
-                <select class="form-select" id="res-booking" required>
-                  <option value="">Select booking…</option>
-                </select>
-              </div>
-            </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label" for="res-status">Status *</label>
-                <select class="form-select" id="res-status" required>
-                  <option value="">Select status…</option>
-                  <option value="confirmed">Confirmed</option>
-                  <option value="in-progress">In Progress</option>
-                  <option value="completed">Completed</option>
-                  <option value="cancelled">Cancelled</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="res-date">Date</label>
-                <input class="form-input" id="res-date" type="date">
-              </div>
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="res-notes">Notes (optional)</label>
-              <textarea class="form-textarea" id="res-notes" rows="2" placeholder="Any notes about this status update…"></textarea>
-            </div>
-            <div id="result-alert" class="alert"></div>
-            <button class="btn btn-primary" type="submit" id="result-submit-btn">Save Status</button>
-          </form>
-        </div>
-        <h3 style="margin-bottom:16px;">Booking Status History</h3>
-        <div id="results-search-bar" style="display:none;margin-bottom:16px;gap:10px;align-items:center;">
-          <input class="form-input" id="results-search" type="text" placeholder="Search by User, Booking, Status, or Date…" autocomplete="off" style="flex:1;min-width:0;">
-          <select class="form-select" id="results-sort" style="width:210px;flex-shrink:0;">
-            <option value="date-desc">Date: Newest first</option>
-            <option value="date-asc">Date: Oldest first</option>
-            <option value="user-asc">User: A → Z</option>
-            <option value="status-asc">Status: A → Z</option>
-          </select>
-        </div>
-        <div id="results-loading" class="loading-spinner"><div class="spinner"></div></div>
-        <div id="results-table-wrap" style="display:none;"></div>
-        <div id="results-empty" class="empty-state" style="display:none;">
-          <p>No booking status updates yet.</p>
-        </div>
-        <div id="results-no-match" class="empty-state" style="display:none;">
-          <p>No status updates match your search.</p>
         </div>
       </div>
 
@@ -340,6 +276,6 @@
     </div>
   </main>
 
-  <script type="module" src="admin.js?v=16"></script>
+  <script type="module" src="admin.js?v=17"></script>
 </body>
 </html>
