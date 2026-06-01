@@ -308,15 +308,16 @@ window.toggleAdminRow = function (id) {
   if (chev) chev.style.transform = open ? "" : "rotate(180deg)";
 };
 
-function bookingRowHTML(b, showStatus) {
+function bookingRowHTML(b, showStatus, panelKey = "") {
+  const uid = panelKey ? `${panelKey}__${b.id}` : b.id;
   const numCols = showStatus ? 9 : 8;
   const tests = Array.isArray(b.selectedTests) && b.selectedTests.length
     ? b.selectedTests.join(", ") : null;
   return `
-    <tr onclick="window.toggleAdminRow('${b.id}')" style="cursor:pointer;">
+    <tr onclick="window.toggleAdminRow('${uid}')" style="cursor:pointer;">
       <td>
         <div style="display:flex;align-items:center;gap:6px;">
-          ${rowChevron(b.id)}
+          ${rowChevron(uid)}
           ${formatDate(b.createdAt)}
         </div>
       </td>
@@ -345,7 +346,7 @@ function bookingRowHTML(b, showStatus) {
         </select>
       </td>
     </tr>
-    <tr id="adr-${b.id}" style="display:none;">
+    <tr id="adr-${uid}" style="display:none;">
       <td colspan="${numCols}" style="padding:0;">
         <div style="padding:12px 20px 14px;background:var(--surface-soft);border-top:1px solid var(--line);">
           <div style="display:flex;flex-wrap:wrap;gap:6px 28px;font-size:13px;color:var(--text-soft);margin-bottom:8px;">
@@ -379,7 +380,7 @@ function renderBookingTable(bookings, wrapId, noMatchId, showStatus) {
         <thead>
           <tr><th>Date</th><th>Client</th><th>Category</th><th>Tests</th><th>Samples</th><th>Delivery</th>${statusTh}<th>Payment</th><th>Actions</th></tr>
         </thead>
-        <tbody>${bookings.map(b => bookingRowHTML(b, showStatus)).join("")}</tbody>
+        <tbody>${bookings.map(b => bookingRowHTML(b, showStatus, wrapId)).join("")}</tbody>
       </table>
     </div>`;
 }
