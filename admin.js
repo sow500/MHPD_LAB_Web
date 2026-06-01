@@ -571,7 +571,8 @@ function applyReportsView() {
     if (sort === "client-asc")   return str(a.clientName || a.userEmail).localeCompare(str(b.clientName || b.userEmail));
     if (sort === "client-desc")  return str(b.clientName || b.userEmail).localeCompare(str(a.clientName || a.userEmail));
     if (sort === "company-asc")  return str(a.companyName).localeCompare(str(b.companyName));
-    if (sort === "testid-asc")   return str(a.testId).localeCompare(str(b.testId), undefined, { numeric: true });
+    if (sort === "testid-asc")   return (parseFloat(a.testId) || 0) - (parseFloat(b.testId) || 0);
+    if (sort === "testid-desc")  return (parseFloat(b.testId) || 0) - (parseFloat(a.testId) || 0);
     return 0;
   });
 
