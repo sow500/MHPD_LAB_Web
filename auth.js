@@ -2,7 +2,8 @@ import { auth, db, googleProvider } from "./firebase-config.js";
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
-  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   updateProfile,
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
@@ -163,30 +164,25 @@ regForm.addEventListener("submit", async (e) => {
   }
 });
 
-// ── Google sign-in (works for both login & register) ──────
-async function handleGoogle() {
-  hideAlert();
-  try {
-    const result = await signInWithPopup(auth, googleProvider);
-    const user   = result.user;
-    const status = await ensureUserProfile(user, {
-      displayName: user.displayName
-    });
-    const snap = await getDoc(doc(db, "users", user.uid));
-    redirectUser(snap.data().status, snap.data().role);
-  } catch (err) {
-    if (err.code === "auth/popup-closed-by-user" || err.code === "auth/cancelled-popup-request") {
-      return;
-    }
-    const msg = err.code === "auth/unauthorized-domain"
-      ? "This domain is not authorized for Google sign-in. Please contact support."
-      : err.code === "auth/popup-blocked"
-      ? "Popup was blocked by your browser. Please allow popups for this site and try again."
-      : err.code === "auth/network-request-failed"
-      ? "Network error. Please check your connection and try again."
-      : `Google sign-in failed (${err.code || "unknown"}). Please try again.`;
-    showAlert(msg);
+// ── Handle redirect result on page load ───────────────────
+getRedirectResult(auth).then(async (result) => {
+  if (!result) return;
+  const user = result.user;
+  await ensureUserProfile(user, { displayName: user.displayName });
+  const snap = await getDoc(doc(db, "users", user.uid));
+  redirectUser(snap.data().status, snap.data().role);
+}).catch((err) => {
+  if (err.code && err.code !== "auth/cancelled-popup-request") {
+    showAlert(`Google sign-in failed (${err.code}). Please try again.`);
   }
+});
+
+// ── Google sign-in — redirect (avoids popup/cookie issues) ─
+function handleGoogle() {
+  hideAlert();
+  signInWithRedirect(auth, googleProvider).catch((err) => {
+    showAlert(`Google sign-in failed (${err.code || "unknown"}). Please try again.`);
+  });
 }
 
 document.getElementById("google-login-btn").addEventListener("click", handleGoogle);
